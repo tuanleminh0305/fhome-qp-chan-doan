@@ -1,0 +1,2038 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow"><title>Bàn giao content QP</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/style.css"><script>(function(){var k='qp-theme';try{var t=localStorage.getItem(k);if(t)document.documentElement.dataset.theme=t}catch(e){}document.addEventListener('click',function(e){var b=e.target.closest('.theme');if(!b)return;var r=document.documentElement,c=r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'),n=c==='dark'?'light':'dark';r.dataset.theme=n;try{localStorage.setItem(k,n)}catch(e){}})})()</script></head><body>
+<a class="skip" href="#main">Bỏ qua tới nội dung</a>
+<header class="top"><div class="bar wide"><a class="brand" href="index.html">FHome Sài Gòn <span>· Query Processing</span></a><nav class="links" aria-label="Điều hướng"><a href="index.html">Tổng quan</a><a href="deck.html">Deck</a><a href="handoff.html" aria-current=page>Bàn giao content</a></nav><button class="theme" type="button" aria-label="Đổi chế độ sáng/tối"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></div></header>
+<main id="main" class=wide><div class="doc"><nav class="toc" aria-label="Mục lục"><ol><li><a href="#1-template-va-url-google-ang-chon">1. Template và URL Google đang chọn</a></li><li><a href="#2-topic-uu-tien-va-keyword-cam-ket-moi-topic-ay">2. Topic ưu tiên và keyword cam kết mỗi topic đẩy</a></li><li><a href="#3-canonical-mot-query-ai-dien-mot-url">3. Canonical: một query đại diện, một URL</a></li><li><a href="#4-tram-hong-theo-cum">4. Trạm hỏng theo cụm</a></li><li><a href="#5-serp-loai-trang-google-muon">5. SERP: loại trang Google muốn</a></li><li><a href="#6-regex-o-trong-gsc">6. Regex đo trong GSC</a></li><li><a href="#7-iem-can-kiem-tay">7. Điểm cần kiểm tay</a></li><li><a href="#8-tra-keyword-template-url-google-tra-hang-topic">8. Tra keyword: template, URL Google trả, hạng, topic</a></li></ol></nav><article class="prose"><h1>FHome Sài Gòn: bàn giao chẩn đoán Query Processing cho team content</h1>
+<blockquote>
+<p>Bản đọc của file bàn giao <code>FHome_qp-handoff-content_v1.md</code> (sinh bằng <code>qp_build.py --handoff</code>). Chữ "cần GSC", "giả thuyết" là điểm chưa kiểm chéo.</p>
+</blockquote>
+<h2 id="1-template-va-url-google-ang-chon">1. Template và URL Google đang chọn</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Template</th>
+<th>Số keyword</th>
+<th>Top 10 (mốc → nay)</th>
+<th>Trạng thái</th>
+<th>URL Google trả nhiều nhất</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>thi công nội thất chung cư [biến]</td>
+<td>21</td>
+<td>0 → 10</td>
+<td>Đang lan</td>
+<td>/thi-cong-noi-that-chung-cu/ (10 keyword)</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố [đẹp · mẫu]</td>
+<td>15</td>
+<td>0 → 0</td>
+<td>Kẹt</td>
+<td>/thiet-ke-noi-that-nha-pho/ (10 keyword)</td>
+</tr>
+<tr>
+<td>nhà phố [kích thước · số tầng · nhỏ]</td>
+<td>15</td>
+<td>5 → 8</td>
+<td>Đang lan</td>
+<td>/thiet-ke-noi-that-nha-pho/nho/ (3 keyword)</td>
+</tr>
+<tr>
+<td>nội thất phong cách [tên]</td>
+<td>17</td>
+<td>2 → 4</td>
+<td>Đã mở</td>
+<td>/phong-cach-thiet-ke/toi-gian/ (4 keyword)</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư [m² · nhỏ]</td>
+<td>29</td>
+<td>20 → 23</td>
+<td>Đã mở</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/ (9 keyword)</td>
+</tr>
+<tr>
+<td>[giá · chi phí] nội thất chung cư</td>
+<td>27</td>
+<td>22 → 22</td>
+<td>Đã mở</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/ (25 keyword)</td>
+</tr>
+<tr>
+<td>nội thất phong cách nhật bản [biến]</td>
+<td>13</td>
+<td>8 → 8</td>
+<td>Đã mở</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/ (12 keyword)</td>
+</tr>
+<tr>
+<td>nội thất [phòng khách · bếp] chung cư</td>
+<td>7</td>
+<td>0 → 2</td>
+<td>Đang lan</td>
+<td>/thiet-ke-noi-that-chung-cu/phong-khach/ (3 keyword)</td>
+</tr>
+<tr>
+<td>nội thất chung cư [số phòng ngủ]</td>
+<td>8</td>
+<td>3 → 5</td>
+<td>Đang lan</td>
+<td>/thiet-ke-noi-that-chung-cu/2-phong-ngu/ (3 keyword)</td>
+</tr>
+<tr>
+<td>[giá · phí] nội thất nhà phố</td>
+<td>5</td>
+<td>0 → 3</td>
+<td>Đang lan</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-nha-pho/ (4 keyword)</td>
+</tr>
+<tr>
+<td>[công ty · dịch vụ · tư vấn] chung cư</td>
+<td>10</td>
+<td>0 → 8</td>
+<td>Đang lan</td>
+<td>/cong-ty-thiet-ke-noi-that/ (6 keyword)</td>
+</tr>
+<tr>
+<td>[dịch vụ] nội thất · quận 9</td>
+<td>9</td>
+<td>5 → 9</td>
+<td>Đang lan</td>
+<td>/thiet-ke-noi-that/quan-9/ (9 keyword)</td>
+</tr>
+<tr>
+<td>[kinh nghiệm · lưu ý · quy trình]</td>
+<td>6</td>
+<td>4 → 6</td>
+<td>Đang lan</td>
+<td>/kinh-nghiem-thiet-ke-noi-that-chung-cu/ (2 keyword)</td>
+</tr>
+<tr>
+<td>[mẫu] thiết kế nội thất chung cư [đẹp]</td>
+<td>25</td>
+<td>0 → 1</td>
+<td>Kẹt</td>
+<td>/thi-cong-noi-that-chung-cu/ (1 keyword)</td>
+</tr>
+<tr>
+<td>[các · xu hướng] phong cách nội thất</td>
+<td>14</td>
+<td>0 → 0</td>
+<td>Chưa có hạng</td>
+<td>—</td>
+</tr>
+<tr>
+<td>thi công nội thất nhà phố [biến]</td>
+<td>5</td>
+<td>0 → 0</td>
+<td>Chưa có hạng</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="2-topic-uu-tien-va-keyword-cam-ket-moi-topic-ay">2. Topic ưu tiên và keyword cam kết mỗi topic đẩy</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Ưu tiên</th>
+<th>Template</th>
+<th>Trạm</th>
+<th>Khi nào</th>
+<th>Vì sao</th>
+<th>Keyword cam kết</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>P1</td>
+<td>thi công nội thất chung cư [biến]</td>
+<td>B4 · B3</td>
+<td>Link tuần 1; nội dung sau 29/10</td>
+<td>Họ đang lan sau go-live. Head 8.100 lượt ở #20. Gom URL và thêm khối gỡ nhiều keyword cùng lúc.</td>
+<td>18: thi công nội thất căn hộ, thi công nội thất căn hộ chung cư, thi công nội thất căn hộ giá rẻ, thi công nội thất chung cư, thi công nội thất chung cư giá rẻ, thi công nội thất chung cư hcm, thi công nội thất chung cư tphcm, thi công nội thất chung cư trọn gói, thi công nội thất chung cư trọn gói tphcm, thiết kế nội thất chung cư trọn gói, thiết kế thi công nội thất căn hộ, thiết kế thi công nội thất căn hộ chung cư, thiết kế thi công nội thất chung cư, thiết kế thi công nội thất chung cư tphcm, thiết kế thi công nội thất chung cư trọn gói, thiết kế thi công nội thất nhà chung cư, thiết kế và thi công nội thất chung cư, thiết kế và thi công nội thất nhà chung cư</td>
+</tr>
+<tr>
+<td>T2</td>
+<td>P1</td>
+<td>chung cư [m² · phòng ngủ · phòng]</td>
+<td>B3 · B2</td>
+<td>Tuần 1–2 · 20–30/10</td>
+<td>Template đã thắng 20 Top 3. Biến thể anh em gần Top 10, việc nhỏ trên trang đã có.</td>
+<td>21: thiết kế nội thất căn hộ 1 phòng ngủ, thiết kế nội thất căn hộ 2 phòng ngủ, thiết kế nội thất căn hộ 3 phòng ngủ, thiết kế nội thất căn hộ 45m2, thiết kế nội thất căn hộ 90m2, thiết kế nội thất căn hộ chung cư 70m, thiết kế nội thất căn hộ chung cư 90m2, thiết kế nội thất chung cư 1 phòng ngủ, thiết kế nội thất chung cư 2 ngủ, thiết kế nội thất chung cư 2 phòng ngủ, thiết kế nội thất chung cư 45m2, thiết kế nội thất chung cư 50m2, thiết kế nội thất chung cư 60m2, thiết kế nội thất chung cư 60m2 đẹp, thiết kế nội thất chung cư nhỏ 50m2, thiết kế nội thất nhà bếp chung cư, thiết kế nội thất phòng bếp chung cư, thiết kế nội thất phòng khách chung cư, thiết kế nội thất phòng khách chung cư đẹp, thiết kế nội thất phòng khách chung cư hiện đại, thiết kế nội thất phòng khách nhà chung cư</td>
+</tr>
+<tr>
+<td>T7</td>
+<td>P1</td>
+<td>[công ty · dịch vụ · tư vấn · tphcm]</td>
+<td>B4 · B5</td>
+<td>Tuần 1 · 17–22/10</td>
+<td>Bài đã giữ Top 10. Thêm một đoạn và link về bài, công sức nhỏ.</td>
+<td>8: công ty thiết kế nội thất hcm, dịch vụ thiết kế nội thất căn hộ, dịch vụ thiết kế nội thất chung cư, thiết kế nội thất căn hộ tphcm, thiết kế nội thất chung cư tại tp hcm, thiết kế nội thất chung cư tphcm, tư vấn thiết kế nội thất căn hộ chung cư, tư vấn thiết kế nội thất nhà chung cư</td>
+</tr>
+<tr>
+<td>T5</td>
+<td>P1</td>
+<td>nội thất phong cách nhật bản [biến]</td>
+<td>B4 · B6</td>
+<td>Tuần 2 · 21–25/10</td>
+<td>Gần Top 10. Một đoạn định nghĩa và một link trên trang có sẵn.</td>
+<td>7: nội thất chung cư phong cách nhật bản, nội thất phòng ngủ phong cách nhật bản, phong cách nhật bản trong nội thất, phong cách nội thất nhật bản, phong cách nội thất nhật bản hiện đại, phong cách thiết kế nội thất nhật bản, thiết kế nội thất chung cư phong cách nhật bản</td>
+</tr>
+<tr>
+<td>T4</td>
+<td>P1</td>
+<td>[giá · chi phí] chung cư · nhà phố</td>
+<td>B2 · B4</td>
+<td>Tuần 2 · 22–25/10</td>
+<td>Trang đang giữ Top 3: chỉ thêm cụm "căn hộ" vào H2, không rút.</td>
+<td>14: bảng giá thi công nội thất chung cư, báo giá thi công nội thất căn hộ, báo giá thi công nội thất nhà phố, báo giá thi công nội thất nhà phố trọn gói, báo giá thiết kế nội thất nhà phố, báo giá trọn gói thi công nội thất căn hộ, giá thi công nội thất căn hộ, giá thi công nội thất chung cư, giá thiết kế nội thất căn hộ, giá thiết kế nội thất nhà phố, phí thiết kế nội thất nhà phố, thiết kế nội thất chung cư giá rẻ, thiết kế nội thất chung cư giá rẻ đẹp, thiết kế nội thất nhà phố rẻ</td>
+</tr>
+<tr>
+<td>T3</td>
+<td>P1</td>
+<td>nhà phố [hub · tầng · kích thước]</td>
+<td>B3 · B8</td>
+<td>Sau 29/10</td>
+<td>Nhóm #11–50 lớn nhất (12 keyword ở hub). Chờ 14 ngày sau go-live rồi mới sửa.</td>
+<td>26: mẫu nội thất nhà phố, mẫu nội thất nhà phố đẹp, mẫu thiết kế nội thất nhà phố, mẫu thiết kế nội thất nhà phố đẹp, nội thất nhà phố 2 tầng đẹp, nội thất nhà phố 3 tầng, nội thất nhà phố đẹp, nội thất nhà phố đơn giản, nội thất nhà phố nhỏ, thiết kế nội thất cho nhà phố, thiết kế nội thất nhà mặt phố, thiết kế nội thất nhà phố, thiết kế nội thất nhà phố 2 tầng, thiết kế nội thất nhà phố 4 tầng, thiết kế nội thất nhà phố 4x 10, thiết kế nội thất nhà phố 5x20, thiết kế nội thất nhà phố 90m2, thiết kế nội thất nhà phố đẹp, thiết kế nội thất nhà phố diện tích nhỏ, thiết kế nội thất nhà phố hcm, thiết kế nội thất nhà phố hiện đại, thiết kế nội thất nhà phố hiện đại đẹp, thiết kế nội thất nhà phố nhỏ, thiết kế nội thất nhà phố tphcm, thiết kế nội thất phòng khách nhà phố, tư vấn thiết kế nội thất nhà phố</td>
+</tr>
+<tr>
+<td>T6</td>
+<td>P2</td>
+<td>nội thất phong cách [tên]</td>
+<td>B7 · B4</td>
+<td>Tuần 3–4</td>
+<td>Việc nội dung trên nhiều trang phong cách. Làm sau nhóm đang lan.</td>
+<td>14: nội thất phong cách wabi sabi, phong cách thiết kế nội thất hiện đại, phong cách thiết kế nội thất tối giản, phong cách thiết kế nội thất tối giản hiện đại, phong cách thiết kế nội thất tropical, phong cách tropical trong thiết kế nội thất, thiết kế nội thất chung cư phong cách hiện đại, thiết kế nội thất chung cư tối giản, thiết kế nội thất phong cách hiện đại, thiết kế nội thất phong cách tối giản, thiết kế nội thất phong cách wabi sabi, thiết kế nội thất phòng ngủ phong cách hiện đại, thiết kế nội thất theo phong cách hiện đại, thiết kế nội thất theo phong cách tối giản</td>
+</tr>
+<tr>
+<td>T8</td>
+<td>P2</td>
+<td>[mẫu] thiết kế nội thất chung cư [đẹp]</td>
+<td>B7 · B4</td>
+<td>Đọc GSC 29/10</td>
+<td>Không phải lỗi kỹ thuật. Sửa thêm trước khi có dữ liệu GSC sau go-live là đoán.</td>
+<td>22: các mẫu thiết kế nội thất chung cư, các mẫu thiết kế nội thất chung cư đẹp, các mẫu thiết kế nội thất nhà chung cư, các mẫu thiết kế nội thất nhà chung cư đẹp, mẫu thiết kế nội thất chung cư, mẫu thiết kế nội thất chung cư đẹp, mẫu thiết kế nội thất nhà chung cư, thiết kế nội thất căn hộ, thiết kế nội thất căn hộ chung cư, thiết kế nội thất căn hộ đẹp, thiết kế nội thất căn hộ hiện đại, thiết kế nội thất cho chung cư, thiết kế nội thất cho nhà chung cư, thiết kế nội thất chung cư, thiết kế nội thất chung cư đẹp, thiết kế nội thất chung cư đơn giản, thiết kế nội thất chung cư hiện đại, thiết kế nội thất chung cư rẻ đẹp, thiết kế nội thất đẹp cho nhà chung cư, thiết kế nội thất nhà chung cư, thiết kế nội thất nhà chung cư đẹp, ý tưởng thiết kế nội thất chung cư</td>
+</tr>
+<tr>
+<td>T9</td>
+<td>P2</td>
+<td>[các · xu hướng] phong cách · TC nhà phố</td>
+<td>B7</td>
+<td>Tuần 2 kỹ thuật; GSC 12/11</td>
+<td>Đã index nhưng chưa có impression. Giảm dung lượng ảnh, lập chỉ mục lại, rồi chờ GSC.</td>
+<td>19: các loại phong cách thiết kế nội thất, các phong cách thiết kế nội thất, các phong cách thiết kế nội thất chung cư, các phong cách thiết kế nội thất hiện đại, các phong cách thiết kế nội thất phổ biến, các phong cách trong thiết kế nội thất, các xu hướng thiết kế nội thất, những phong cách thiết kế nội thất, phong cách thiết kế nội thất chung cư, thi công nội thất nhà phố, thi công nội thất nhà phố hcm, thi công nội thất nhà phố trọn gói tphcm, thiết kế thi công nội thất nhà phố, thiết kế và thi công nội thất nhà phố, xu hướng nội thất hiện đại, xu hướng thiết kế nội thất, xu hướng thiết kế nội thất chung cư, xu hướng thiết kế nội thất hiện đại, xu hướng thiết kế nội thất hiện nay</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="3-canonical-mot-query-ai-dien-mot-url">3. Canonical: một query đại diện, một URL</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Query đại diện</th>
+<th>URL Google đang chọn</th>
+<th>Vấn đề</th>
+<th>Quyết định</th>
+<th>Topic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>thi công nội thất chung cư [trọn gói · thiết kế và thi công]</td>
+<td>Trang thi công #20 cho head; trang giá giữ "trọn gói" #8; bài quy trình giữ "thiết kế thi công" #26–62</td>
+<td>Một họ query chia 3 URL. GSC: "thiết kế nội thất chung cư trọn gói" chia trang giá (#23) và trang thi công (#32).</td>
+<td>Trang thi công là URL đại diện. Trang giá và bài quy trình giữ nguyên, thêm link về trang thi công. Chưa rút nội dung.</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>dịch vụ · tư vấn · tphcm thiết kế nội thất chung cư</td>
+<td>/cong-ty-thiet-ke-noi-that/ #3–9; trang thi công nhận "dịch vụ…", "tư vấn … nhà chung cư" #7–9</td>
+<td>Họ tìm đơn vị chia 2 URL. GSC: /cong-ty/ vị trí 6–12, trang thi công 43–54.</td>
+<td>Bài /cong-ty/ là URL đại diện cho họ tìm đơn vị, gồm 3 cách gõ tphcm. Không thêm anchor "dịch vụ thiết kế" về hub.</td>
+<td>T7</td>
+</tr>
+<tr>
+<td>nội thất chung cư phong cách nhật bản</td>
+<td>Trang phòng khách Nhật #6; trang chung cư Nhật ở 70–82 (GSC)</td>
+<td>Trang đúng intent có thật nhưng Google chọn trang phòng khách.</td>
+<td>Target trang chung cư Nhật. Giữ trang phòng khách tới khi trang chung cư Nhật vào Top 10.</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>phong cách nội thất nhật bản</td>
+<td>Trang phòng khách Nhật #11–14 cho 4 keyword "phong cách…"</td>
+<td>Intent tìm hiểu phong cách, trang phòng khách trả lời lệch. Trang phong cách Nhật không có hạng cho nhóm này.</td>
+<td>Trang phong cách Nhật nhận nhóm "phong cách…": thêm đoạn định nghĩa dưới H1, link từ trang phòng khách Nhật.</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>lưu ý khi thiết kế nội thất chung cư</td>
+<td>Bài lưu ý thi công #7; bài lưu ý thiết kế ở #20 (GSC)</td>
+<td>Hai bài lưu ý tranh một query, hai bài chưa link nhau.</td>
+<td>Bài lưu ý thiết kế là URL đại diện. Thêm link qua lại giữa hai bài.</td>
+<td>đề xuất mới</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="4-tram-hong-theo-cum">4. Trạm hỏng theo cụm</h2>
+<p>Trạm B2 (segment), B3 (biến thể), B6 (câu hỏi), B8 (passage) là việc team content làm được. B4 (canonical), B5 (context), B7 (retrieve) là việc của team SEO và dev: sửa trạm đó trước, chưa viết thêm nội dung.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Cụm</th>
+<th>Trạm chính</th>
+<th>Trạm phụ</th>
+<th>Việc sửa</th>
+<th>Team content làm?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Thi công chung cư</td>
+<td>B4</td>
+<td>B3</td>
+<td>https://fhomesg.vn/thi-cong-noi-that-chung-cu/: thêm khối thiết kế và thi công, gói tiết kiệm, link thân bài sang trang giá, bài quy trình, bài lưu ý. Chưa rút khối cũ.</td>
+<td>Chờ team SEO sửa trước</td>
+</tr>
+<tr>
+<td>Trang con chung cư</td>
+<td>B3</td>
+<td>B2</td>
+<td>Trang /thiet-ke-noi-that-chung-cu/50m2/, /60m2/, /1-phong-ngu/, /2-phong-ngu/: thêm mẫu ảnh thật, đưa "căn hộ" vào đoạn mở và H2.</td>
+<td>Có</td>
+</tr>
+<tr>
+<td>Nhà phố: hub và trang con</td>
+<td>B3</td>
+<td>B8</td>
+<td>Sau 29/10: https://fhomesg.vn/thiet-ke-noi-that-nha-pho/ thêm khối mẫu theo phong cách; trang /2-tang/, /3-tang/, /5x20m/ thêm mẫu và đoạn bố trí.</td>
+<td>Có</td>
+</tr>
+<tr>
+<td>Giá chung cư và nhà phố</td>
+<td>B2</td>
+<td>B4</td>
+<td>https://fhomesg.vn/gia-thiet-ke-thi-cong-noi-that-chung-cu/: thêm "căn hộ" vào H2 bảng giá. Giữ nội dung, chỉ thêm.</td>
+<td>Có</td>
+</tr>
+<tr>
+<td>Nhật Bản: 3 URL</td>
+<td>B4</td>
+<td>B6</td>
+<td>https://fhomesg.vn/phong-cach-thiet-ke/nhat-ban/: thêm đoạn định nghĩa dưới H1. Trang phòng khách Nhật link anchor "phong cách nội thất Nhật Bản".</td>
+<td>Chờ team SEO sửa trước</td>
+</tr>
+<tr>
+<td>Phong cách theo tên</td>
+<td>B7</td>
+<td>B4</td>
+<td>https://fhomesg.vn/phong-cach-thiet-ke/hien-dai/: theo dõi GSC. Trang /toi-gian/, /wabi-sabi/: thêm mẫu ảnh thật và đoạn đặc trưng dưới H1.</td>
+<td>Chờ team SEO sửa trước</td>
+</tr>
+<tr>
+<td>Công ty, dịch vụ, tphcm</td>
+<td>B4</td>
+<td>B5</td>
+<td>https://fhomesg.vn/cong-ty-thiet-ke-noi-that/: thêm đoạn dịch vụ thiết kế chung cư tại TP.HCM; trang thi công link về bài này.</td>
+<td>Chờ team SEO sửa trước</td>
+</tr>
+<tr>
+<td>Head chung cư</td>
+<td>B7</td>
+<td>B4</td>
+<td>https://fhomesg.vn/thiet-ke-noi-that-chung-cu/: không viết trang mới. Đọc GSC theo tuần từ 15/10; 29/10 vẫn 0 impression thì xét lại phần trùng giữa hub và trang con.</td>
+<td>Chờ team SEO sửa trước</td>
+</tr>
+<tr>
+<td>Các phong cách, xu hướng, TC nhà phố</td>
+<td>B7</td>
+<td>—</td>
+<td>https://fhomesg.vn/cac-phong-cach-thiet-ke-noi-that/: giảm dung lượng ảnh. https://fhomesg.vn/xu-huong-thiet-ke-noi-that/: yêu cầu lập chỉ mục lại. Theo dõi GSC.</td>
+<td>Chờ team SEO sửa trước</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="5-serp-loai-trang-google-muon">5. SERP: loại trang Google muốn</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Query</th>
+<th>Kết luận</th>
+<th>Vì vậy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>thiết kế nội thất chung cư</td>
+<td>Intent xem mẫu. 6/8 kết quả là trang "N mẫu" của đơn vị nội thất.</td>
+<td>Vì vậy: giữ dạng "126+ mẫu" của hub. Hub đúng loại trang mà chưa có hạng, nên xét trạm Retrieve (T8).</td>
+</tr>
+<tr>
+<td>thi công nội thất chung cư</td>
+<td>Intent hỗn hợp: dịch vụ trọn gói, báo giá, quy trình. AI Overview định nghĩa "trọn gói" và trích giá theo số phòng ngủ.</td>
+<td>Vì vậy: trang thi công cần đủ khối gói trọn gói, giá tóm tắt và quy trình tóm tắt có link (T1).</td>
+</tr>
+<tr>
+<td>báo giá thiết kế nội thất chung cư</td>
+<td>Intent giá. 7/8 kết quả là trang báo giá có bảng theo m², gói hoặc phòng ngủ.</td>
+<td>Vì vậy: trang giá giữ họ query giá. Trang khác chỉ tóm tắt giá và link về trang giá (T4).</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="6-regex-o-trong-gsc">6. Regex đo trong GSC</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Template</th>
+<th>Regex</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Thi công chung cư (T1)</td>
+<td><code>(?i)^(chuyên |thiết kế (và )?)?thi công (hoàn thiện )?nội thất (căn hộ|nhà chung cư|chung cư)|cư trọn gói</code></td>
+</tr>
+<tr>
+<td>Giá chung cư (T4)</td>
+<td><code>(?i)(giá|chi phí|bao nhiêu).*(chung cư|căn hộ)|(chung cư|căn hộ).*(giá|chi phí)</code></td>
+</tr>
+<tr>
+<td>Trang con m² · phòng ngủ (T2)</td>
+<td><code>(?i)(chung cư|căn hộ).*([0-9]+ ?m2?( |$)|nhỏ|[1-3] (phòng )?ngủ|phòng khách|bếp)</code></td>
+</tr>
+<tr>
+<td>Nhà phố (T3)</td>
+<td><code>(?i)nhà (mặt )?phố</code></td>
+</tr>
+<tr>
+<td>Công ty · tphcm (T7)</td>
+<td><code>(?i)công ty|dịch vụ|đơn vị|tư vấn|uy tín|tp ?hcm</code></td>
+</tr>
+<tr>
+<td>Head chung cư (T8)</td>
+<td><code>(?i)^(các )?(mẫu )?thiết kế nội thất (cho )?(nhà )?(chung cư|căn hộ)( chung cư)?( đẹp| hiện đại)?$</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="7-iem-can-kiem-tay">7. Điểm cần kiểm tay</h2>
+<ul>
+<li>Đo: Lần chạy bị loại: 05.10.2026 12:00 (nghi thiếu: 35 keyword có hạng, median các lần 155).</li>
+<li>Đo: Lần chạy bị loại: 04.10.2026 18:58 (nghi thiếu: 87 keyword có hạng, median các lần 155).</li>
+<li>Đo: Lần chạy bị loại: 26.09.2026 12:00 (nghi thiếu: 28 keyword có hạng, median các lần 155).</li>
+<li>Canonical: 1/22 keyword của URL target /thiet-ke-noi-that-chung-cu đang được Google trả về URL khác.</li>
+<li>Canonical: 11/21 keyword của URL target /thi-cong-noi-that-chung-cu đang được Google trả về URL khác.</li>
+<li>Canonical: 4/12 keyword của URL target /cong-ty-thiet-ke-noi-that đang được Google trả về URL khác.</li>
+<li>Canonical: 1/6 keyword của URL target /gia-thiet-ke-thi-cong-noi-that-nha-pho đang được Google trả về URL khác.</li>
+<li>Canonical: 4/4 keyword của URL target /phong-cach-thiet-ke/nhat-ban đang được Google trả về URL khác.</li>
+<li>Canonical: 2/2 keyword của URL target /thiet-ke-noi-that-chung-cu/nhat-ban đang được Google trả về URL khác.</li>
+<li>Canonical: 1/1 keyword của URL target /luu-y-khi-thiet-ke-noi-that-chung-cu đang được Google trả về URL khác.</li>
+<li>Đo: Hợp đồng chưa có trong repo. Bộ 226 keyword và engine G1 do Lead xác nhận 16/10.</li>
+<li>Đo: Sheet không ghi giờ chạy: lần 15/10 có thể chạy trước go-live 10:49. Sheet không có URL Google trả; URL lấy theo export 14/10.</li>
+<li>Đo: Lượt tìm theo cột Volume SpySERP; 28 keyword ghi 0. Sheet và GSC cho số khác ("thi công nội thất căn hộ": 480 / sheet 390 / GSC 3.781 impression 28 ngày).</li>
+<li>SERP: SERP lấy từ ảnh chụp Google desktop 14/10, vị trí đo không ghi trên ảnh. Firecrawl hết credit nên chưa đọc lại.</li>
+<li>Ưu tiên: Topic T1–T9 đề xuất 16/10, chưa kiểm chéo độc lập. 18 keyword đổi URL target trong sheet ngày 16/10.</li>
+<li>Retrieve: Giả thuyết Retrieve cho head chung cư, các phong cách, thi công nhà phố cần GSC thêm 2 tuần sau go-live.</li>
+</ul>
+<h2 id="8-tra-keyword-template-url-google-tra-hang-topic">8. Tra keyword: template, URL Google trả, hạng, topic</h2>
+<p>Tra bằng tìm chữ (Ctrl+F hoặc grep), không đọc hết bảng. Hạng là median các lần chạy hợp lệ; trống = ngoài độ sâu đo.</p>
+<div class="filter"><label for="q">Lọc keyword</label><input id="q" type="search" placeholder="Gõ keyword, URL hoặc mã topic, ví dụ T1" autocomplete="off"><output id="qn" aria-live="polite"></output></div><div class="table-wrap"><table id="lookup">
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Template</th>
+<th>URL Google trả</th>
+<th>Hạng nay</th>
+<th>Topic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>các loại phong cách thiết kế nội thất</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>các phong cách thiết kế nội thất</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>các phong cách thiết kế nội thất chung cư</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>các phong cách thiết kế nội thất hiện đại</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>các phong cách thiết kế nội thất phổ biến</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>các phong cách trong thiết kế nội thất</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>các xu hướng thiết kế nội thất</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>những phong cách thiết kế nội thất</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>phong cách thiết kế nội thất chung cư</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>xu hướng nội thất hiện đại</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>xu hướng thiết kế nội thất</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>xu hướng thiết kế nội thất chung cư</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>xu hướng thiết kế nội thất hiện đại</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>xu hướng thiết kế nội thất hiện nay</td>
+<td>cac_phong_cach</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>mẫu thiết kế nội thất chung cư nhỏ</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ chung cư nhỏ</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ nhỏ</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất cho căn hộ chung cư nhỏ</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất cho căn hộ nhỏ</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất cho nhà chung cư nhỏ</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 100m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/100m2/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 70m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/70m2/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 80m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/80m2/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư diện tích nhỏ</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư nhỏ</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư nhỏ đẹp</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/nho/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà chung cư 65m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/65m2/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà chung cư 75m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/75m2/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>mẫu thiết kế nội thất căn hộ chung cư 70m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/70m2/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất cho căn hộ 90m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/90m2/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất cho căn hộ chung cư 70m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/70m2/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 90m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/90m2/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà chung cư 80m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/80m2/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>mẫu thiết kế nội thất căn hộ 70m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/70m2/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 45m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/45m2/</td>
+<td>4</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ 90m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/90m2/</td>
+<td>10</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ chung cư 90m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/90m2/</td>
+<td>10</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ 45m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/45m2/</td>
+<td>17</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư nhỏ 50m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/50m2/</td>
+<td>18</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ chung cư 70m</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/70m2/</td>
+<td>19</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 50m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/50m2/</td>
+<td>22</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 60m2</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/60m2/</td>
+<td>26</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 60m2 đẹp</td>
+<td>cc_m2_nho</td>
+<td>/thiet-ke-noi-that-chung-cu/60m2/</td>
+<td>37</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư uy tín</td>
+<td>cong_ty</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>công ty thiết kế nội thất chung cư uy tín</td>
+<td>cong_ty</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td>đơn vị thiết kế nội thất chung cư</td>
+<td>cong_ty</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>5</td>
+<td></td>
+</tr>
+<tr>
+<td>tư vấn thiết kế nội thất chung cư</td>
+<td>cong_ty</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>5</td>
+<td></td>
+</tr>
+<tr>
+<td>tư vấn thiết kế nội thất căn hộ chung cư</td>
+<td>cong_ty</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>6</td>
+<td>T7</td>
+</tr>
+<tr>
+<td>dịch vụ thiết kế nội thất chung cư</td>
+<td>cong_ty</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>7</td>
+<td>T7</td>
+</tr>
+<tr>
+<td>dịch vụ thiết kế nội thất căn hộ</td>
+<td>cong_ty</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>8</td>
+<td>T7</td>
+</tr>
+<tr>
+<td>tư vấn thiết kế nội thất nhà chung cư</td>
+<td>cong_ty</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>9</td>
+<td>T7</td>
+</tr>
+<tr>
+<td>công ty thiết kế nội thất hcm</td>
+<td>cong_ty</td>
+<td>—</td>
+<td></td>
+<td>T7</td>
+</tr>
+<tr>
+<td>tư vấn thiết kế nội thất nhà phố</td>
+<td>cong_ty</td>
+<td>—</td>
+<td></td>
+<td>T3</td>
+</tr>
+<tr>
+<td>báo giá thi công nội thất cho chung cư nhỏ</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>báo giá thi công nội thất chung cư nhỏ</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>báo giá thiết kế thi công nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>đơn giá thi công nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>báo giá thi công nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>bảng giá thiết kế nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>báo giá thi công nội thất căn hộ chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>báo giá thiết kế nội thất căn hộ</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>báo giá thiết kế nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>giá thiết kế nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>giá thiết kế nội thất chung cư cao cấp</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>chi phí thiết kế nội thất căn hộ</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td>giá thiết kế nội thất nhà chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td>giá thiết kế và thi công nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td>giá thuê thiết kế nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư giá bao nhiêu</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td>chi phí thi công nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>5</td>
+<td></td>
+</tr>
+<tr>
+<td>chi phí thiết kế nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>5</td>
+<td></td>
+</tr>
+<tr>
+<td>giá thiết kế nội thất căn hộ chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>5</td>
+<td></td>
+</tr>
+<tr>
+<td>bảng giá thi công nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>8</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>báo giá thi công nội thất căn hộ</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>10</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>giá thi công nội thất căn hộ</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>10</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>giá thi công nội thất chung cư</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>13</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>báo giá trọn gói thi công nội thất căn hộ</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>16</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>giá thiết kế nội thất căn hộ</td>
+<td>gia_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>19</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư giá rẻ</td>
+<td>gia_cc</td>
+<td>—</td>
+<td></td>
+<td>T4</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư giá rẻ đẹp</td>
+<td>gia_cc</td>
+<td>—</td>
+<td></td>
+<td>T4</td>
+</tr>
+<tr>
+<td>báo giá thi công nội thất nhà phố</td>
+<td>gia_nhapho</td>
+<td>—</td>
+<td>7</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>giá thiết kế nội thất nhà phố</td>
+<td>gia_nhapho</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-nha-pho/</td>
+<td>8</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>phí thiết kế nội thất nhà phố</td>
+<td>gia_nhapho</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-nha-pho/</td>
+<td>8</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>báo giá thiết kế nội thất nhà phố</td>
+<td>gia_nhapho</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-nha-pho/</td>
+<td>11</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>báo giá thi công nội thất nhà phố trọn gói</td>
+<td>gia_nhapho</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-nha-pho/</td>
+<td>17</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư tại tp hcm</td>
+<td>head_cc</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>6</td>
+<td>T7</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư đơn giản</td>
+<td>head_cc</td>
+<td>/thiet-ke-noi-that-chung-cu/toi-gian/</td>
+<td>21</td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư tphcm</td>
+<td>head_cc</td>
+<td>/thiet-ke-noi-that-chung-cu/</td>
+<td>30</td>
+<td>T7</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ tphcm</td>
+<td>head_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>34</td>
+<td>T7</td>
+</tr>
+<tr>
+<td>các mẫu thiết kế nội thất chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>các mẫu thiết kế nội thất chung cư đẹp</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>các mẫu thiết kế nội thất nhà chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>các mẫu thiết kế nội thất nhà chung cư đẹp</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>mẫu thiết kế nội thất chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>mẫu thiết kế nội thất chung cư đẹp</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>mẫu thiết kế nội thất nhà chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ đẹp</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ hiện đại</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất cho chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất cho nhà chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư đẹp</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư hiện đại</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư rẻ đẹp</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất đẹp cho nhà chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà chung cư đẹp</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>ý tưởng thiết kế nội thất chung cư</td>
+<td>head_cc</td>
+<td>—</td>
+<td></td>
+<td>T8</td>
+</tr>
+<tr>
+<td>quy trình thi công nội thất chung cư</td>
+<td>kinh_nghiem</td>
+<td>/quy-trinh-thi-cong-noi-that-chung-cu/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>kinh nghiệm thiết kế nội thất chung cư</td>
+<td>kinh_nghiem</td>
+<td>/kinh-nghiem-thiet-ke-noi-that-chung-cu/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>kinh nghiệm thiết kế nội thất nhà chung cư</td>
+<td>kinh_nghiem</td>
+<td>/kinh-nghiem-thiet-ke-noi-that-chung-cu/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>lưu ý khi thiết kế nội thất nhà phố</td>
+<td>kinh_nghiem</td>
+<td>/luu-y-khi-thiet-ke-noi-that-nha-pho/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>lưu ý khi thiết kế nội thất chung cư</td>
+<td>kinh_nghiem</td>
+<td>/luu-y-khi-thi-cong-noi-that-chung-cu/</td>
+<td>7</td>
+<td></td>
+</tr>
+<tr>
+<td>lưu ý khi thi công nội thất chung cư</td>
+<td>kinh_nghiem</td>
+<td>/luu-y-khi-thi-cong-noi-that-chung-cu/</td>
+<td>8</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 16x5m</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/16x5m/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 4x 14 m</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/4x14m/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 4x14m</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/4x14m/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 4x 16 m</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/4x16m/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 4x16 m</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/4x16m/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 4 tầng</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/4-tang/</td>
+<td>6</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố nhỏ</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/nho/</td>
+<td>9</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố diện tích nhỏ</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/nho/</td>
+<td>10</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 4x 10</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/4x10m/</td>
+<td>12</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>nội thất nhà phố nhỏ</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/nho/</td>
+<td>13</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 90m2</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/90m2/</td>
+<td>16</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>nội thất nhà phố 2 tầng đẹp</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/2-tang/</td>
+<td>25</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 2 tầng</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/2-tang/</td>
+<td>25</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố 5x20</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/5x20m/</td>
+<td>25</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>nội thất nhà phố 3 tầng</td>
+<td>nhapho_bien</td>
+<td>/thiet-ke-noi-that-nha-pho/3-tang/</td>
+<td>39</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>nội thất phong cách nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>nội thất theo phong cách nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất phong cách nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>nội thất phòng khách phong cách nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất phong cách nhật</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất theo phong cách nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>nội thất chung cư phong cách nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>6</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư phong cách nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>6</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>phong cách nội thất nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>11</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>phong cách nhật bản trong nội thất</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>12</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>phong cách nội thất nhật bản hiện đại</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>12</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>phong cách thiết kế nội thất nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-khach/nhat-ban/</td>
+<td>14</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>nội thất phòng ngủ phong cách nhật bản</td>
+<td>nhat</td>
+<td>/thiet-ke-noi-that-phong-ngu/nhat-ban/</td>
+<td>23</td>
+<td>T5</td>
+</tr>
+<tr>
+<td>phong cách nội thất farmhouse</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/farmhouse/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất phong cách tropical</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/tropical/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất phong cách farmhouse</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/farmhouse/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>phong cách thiết kế nội thất tropical</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/tropical/</td>
+<td>10</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư tối giản</td>
+<td>phong_cach_ten</td>
+<td>/thiet-ke-noi-that-chung-cu/toi-gian/</td>
+<td>11</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>phong cách tropical trong thiết kế nội thất</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/tropical/</td>
+<td>13</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phong cách wabi sabi</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/wabi-sabi/</td>
+<td>17</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất theo phong cách tối giản</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/toi-gian/</td>
+<td>18</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>nội thất phong cách wabi sabi</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/wabi-sabi/</td>
+<td>22</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>phong cách thiết kế nội thất tối giản</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/toi-gian/</td>
+<td>22</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>phong cách thiết kế nội thất tối giản hiện đại</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/toi-gian/</td>
+<td>24</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phong cách tối giản</td>
+<td>phong_cach_ten</td>
+<td>/phong-cach-thiet-ke/toi-gian/</td>
+<td>24</td>
+<td>T6</td>
+</tr>
+<tr>
+<td>phong cách thiết kế nội thất hiện đại</td>
+<td>phong_cach_ten</td>
+<td>—</td>
+<td></td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư phong cách hiện đại</td>
+<td>phong_cach_ten</td>
+<td>—</td>
+<td></td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phong cách hiện đại</td>
+<td>phong_cach_ten</td>
+<td>—</td>
+<td></td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phòng ngủ phong cách hiện đại</td>
+<td>phong_cach_ten</td>
+<td>—</td>
+<td></td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất theo phong cách hiện đại</td>
+<td>phong_cach_ten</td>
+<td>—</td>
+<td></td>
+<td>T6</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phòng khách chung cư</td>
+<td>phong_cc</td>
+<td>/thiet-ke-noi-that-chung-cu/phong-khach/</td>
+<td>7</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phòng khách nhà chung cư</td>
+<td>phong_cc</td>
+<td>/thiet-ke-noi-that-chung-cu/phong-khach/</td>
+<td>9</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phòng khách chung cư hiện đại</td>
+<td>phong_cc</td>
+<td>/thiet-ke-noi-that-chung-cu/phong-khach/</td>
+<td>11</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phòng khách nhà phố</td>
+<td>phong_cc</td>
+<td>/thiet-ke-noi-that-nha-pho/phong-khach/</td>
+<td>11</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phòng khách chung cư đẹp</td>
+<td>phong_cc</td>
+<td>—</td>
+<td>15</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất phòng bếp chung cư</td>
+<td>phong_cc</td>
+<td>/thiet-ke-noi-that-chung-cu/nha-bep/</td>
+<td>16</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà bếp chung cư</td>
+<td>phong_cc</td>
+<td>/thiet-ke-noi-that-chung-cu/nha-bep/</td>
+<td>21</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>công ty thi công nội thất chung cư quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế thi công nội thất chung cư quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>đơn vị thiết kế nội thất chung cư quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>thi công nội thất chung cư quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>đơn vị thi công nội thất nhà phố quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>đơn vị thiết kế nội thất nhà phố quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td>thi công nội thất nhà phố quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>5</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố quận 9</td>
+<td>quan9</td>
+<td>/thiet-ke-noi-that/quan-9/</td>
+<td>9</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 3 ngủ</td>
+<td>so_phong_ngu</td>
+<td>/thiet-ke-noi-that-chung-cu/3-phong-ngu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 3 phòng ngủ</td>
+<td>so_phong_ngu</td>
+<td>/thiet-ke-noi-that-chung-cu/3-phong-ngu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 1 phòng ngủ</td>
+<td>so_phong_ngu</td>
+<td>/thiet-ke-noi-that-chung-cu/1-phong-ngu/</td>
+<td>5</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ 3 phòng ngủ</td>
+<td>so_phong_ngu</td>
+<td>/thiet-ke-noi-that-chung-cu/3-phong-ngu/</td>
+<td>6</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 2 phòng ngủ</td>
+<td>so_phong_ngu</td>
+<td>/thiet-ke-noi-that-chung-cu/2-phong-ngu/</td>
+<td>6</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ 1 phòng ngủ</td>
+<td>so_phong_ngu</td>
+<td>/thiet-ke-noi-that-chung-cu/1-phong-ngu/</td>
+<td>16</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất căn hộ 2 phòng ngủ</td>
+<td>so_phong_ngu</td>
+<td>/thiet-ke-noi-that-chung-cu/2-phong-ngu/</td>
+<td>16</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư 2 ngủ</td>
+<td>so_phong_ngu</td>
+<td>/thiet-ke-noi-that-chung-cu/2-phong-ngu/</td>
+<td>22</td>
+<td>T2</td>
+</tr>
+<tr>
+<td>thi công hoàn thiện nội thất chung cư</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>chuyên thi công nội thất chung cư</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>4</td>
+<td></td>
+</tr>
+<tr>
+<td>thi công nội thất nhà chung cư</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>5</td>
+<td></td>
+</tr>
+<tr>
+<td>thi công nội thất căn hộ chung cư</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>6</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế thi công nội thất chung cư tphcm</td>
+<td>tc_cc</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>6</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế và thi công nội thất chung cư</td>
+<td>tc_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>7</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất chung cư hcm</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>8</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế nội thất chung cư trọn gói</td>
+<td>tc_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>8</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế thi công nội thất chung cư trọn gói</td>
+<td>tc_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>8</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất chung cư trọn gói tphcm</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>10</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất chung cư giá rẻ</td>
+<td>tc_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>11</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất chung cư tphcm</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>11</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất căn hộ</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>15</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất chung cư trọn gói</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>15</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất chung cư</td>
+<td>tc_cc</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>20</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất căn hộ giá rẻ</td>
+<td>tc_cc</td>
+<td>/gia-thiet-ke-thi-cong-noi-that-chung-cu/</td>
+<td>25</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế thi công nội thất chung cư</td>
+<td>tc_cc</td>
+<td>/quy-trinh-thi-cong-noi-that-chung-cu/</td>
+<td>26</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế và thi công nội thất nhà chung cư</td>
+<td>tc_cc</td>
+<td>/quy-trinh-thi-cong-noi-that-chung-cu/</td>
+<td>42</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế thi công nội thất nhà chung cư</td>
+<td>tc_cc</td>
+<td>/quy-trinh-thi-cong-noi-that-chung-cu/</td>
+<td>43</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế thi công nội thất căn hộ chung cư</td>
+<td>tc_cc</td>
+<td>/quy-trinh-thi-cong-noi-that-chung-cu/</td>
+<td>56</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thiết kế thi công nội thất căn hộ</td>
+<td>tc_cc</td>
+<td>/quy-trinh-thi-cong-noi-that-chung-cu/</td>
+<td>62</td>
+<td>T1</td>
+</tr>
+<tr>
+<td>thi công nội thất nhà phố</td>
+<td>tc_nhapho</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>thi công nội thất nhà phố hcm</td>
+<td>tc_nhapho</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>thi công nội thất nhà phố trọn gói tphcm</td>
+<td>tc_nhapho</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>thiết kế thi công nội thất nhà phố</td>
+<td>tc_nhapho</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>thiết kế và thi công nội thất nhà phố</td>
+<td>tc_nhapho</td>
+<td>—</td>
+<td></td>
+<td>T9</td>
+</tr>
+<tr>
+<td>mẫu nội thất nhà phố đẹp</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>16</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>nội thất nhà phố đẹp</td>
+<td>tk_nhapho</td>
+<td>—</td>
+<td>17</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>mẫu nội thất nhà phố</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>24</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>mẫu thiết kế nội thất nhà phố</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>24</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà mặt phố</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>24</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>24</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố đẹp</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>24</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất cho nhà phố</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>27</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố tphcm</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>28</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>mẫu thiết kế nội thất nhà phố đẹp</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>34</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>nội thất nhà phố đơn giản</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>44</td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố rẻ</td>
+<td>tk_nhapho</td>
+<td>/thiet-ke-noi-that-nha-pho/nho/</td>
+<td>47</td>
+<td>T4</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố hcm</td>
+<td>tk_nhapho</td>
+<td>—</td>
+<td></td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố hiện đại</td>
+<td>tk_nhapho</td>
+<td>—</td>
+<td></td>
+<td>T3</td>
+</tr>
+<tr>
+<td>thiết kế nội thất nhà phố hiện đại đẹp</td>
+<td>tk_nhapho</td>
+<td>—</td>
+<td></td>
+<td>T3</td>
+</tr>
+</tbody>
+</table></div></article></div></main><footer>Tài liệu nội bộ GTV SEO · không gửi khách · dữ liệu SpySERP (G1) và Google Search Console, cập nhật 16/10/2026.</footer><script>(function(){var q=document.getElementById('q'),t=document.getElementById('lookup'),o=document.getElementById('qn');if(q&&t){var rs=[].slice.call(t.tBodies[0].rows);function f(){var v=q.value.trim().toLowerCase(),n=0;rs.forEach(function(r){var s=!v||r.textContent.toLowerCase().indexOf(v)>-1;r.hidden=!s;if(s)n++});o.textContent=n+' / '+rs.length+' keyword'}q.addEventListener('input',f);f()}
+var ls=[].slice.call(document.querySelectorAll('.toc a'));if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){ls.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id)})}})},{rootMargin:'-80px 0px -70% 0px'});document.querySelectorAll('.prose h2[id]').forEach(function(x){io.observe(x)})}})()</script></body></html>

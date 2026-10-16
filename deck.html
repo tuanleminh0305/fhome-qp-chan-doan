@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FHome Sài Gòn · Query Processing đẩy keyword cam kết</title>
+<!-- Deck nội bộ GTV, không gửi khách. Nguồn dựng: skill query-processing-diagnosis, scripts/qp_render.py. Sửa nội dung ở file JSON rồi dựng lại, không sửa HTML. Điều hướng: ← → / Space / vuốt. #n mở slide n. ?qa hiện trạng thái cuối. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@1,9..144,500&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   THEME — GTV house style
+   Đổi màu/font toàn deck tại đây.
+   =========================================== */
+:root{
+  --blue:#0693E3; --blue-deep:#0B76B8; --purple:#9900EF; --pink:#EF004B;
+  --grad:linear-gradient(90deg,#0693E3 0%,#9900EF 100%);
+  --grad-v:linear-gradient(160deg,#0693E3 0%,#9900EF 100%);
+  --ink:#030815; --muted:#475569; --faint:#94A3B8;
+  --bg:#FFFFFF; --bg-2:#F8FAFC; --bg-3:#F1F5F9;
+  --line:#E2E8F0; --line-2:#CBD5E1;
+  --stage-bg:#0B0F1A; --slide-bg:#FFFFFF;
+  --disp:'Bricolage Grotesque','Be Vietnam Pro',sans-serif;
+  --body:'Be Vietnam Pro','Helvetica Neue',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --serif:'Fraunces',Georgia,serif;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ===========================================
+   FIXED 16:9 STAGE — viewport-base.css (bắt buộc, giữ nguyên)
+   =========================================== */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000)}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000)}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff)}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff)}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
+img,video,canvas,svg{max-width:100%;max-height:100%}
+.deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000}
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;background:#fff}
+  .deck-viewport{position:static;overflow:visible;background:#fff}
+  .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none}
+  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always}
+  .slide:last-child{break-after:auto;page-break-after:auto}
+  .deck-controls{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.2s!important}
+}
+
+/* ===========================================
+   SLIDE FRAME — nền lưới, glow, chrome, footer
+   =========================================== */
+body{font-family:var(--body);color:var(--ink);-webkit-font-smoothing:antialiased}
+.slide{font-family:var(--body);color:var(--ink)}
+.bg-grid{position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(148,163,184,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.13) 1px,transparent 1px);
+  background-size:48px 48px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 40%,#000 30%,transparent 100%);
+          mask-image:radial-gradient(ellipse 80% 70% at 50% 40%,#000 30%,transparent 100%)}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;opacity:.32}
+.glow.g1{width:620px;height:620px;right:-160px;top:-200px;background:#0693E3}
+.glow.g2{width:560px;height:560px;left:-200px;bottom:-240px;background:#9900EF;opacity:.2}
+.chrome{position:absolute;top:44px;left:120px;right:120px;display:flex;justify-content:space-between;align-items:center;font:500 18px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:2}
+.chrome .sec{color:var(--blue)}
+.chrome .sec b{color:var(--purple);font-weight:600}
+.foot{position:absolute;bottom:38px;left:120px;right:120px;display:flex;justify-content:space-between;font:400 16px/1 var(--mono);color:var(--faint);letter-spacing:.06em;z-index:2}
+.wrap{position:absolute;left:120px;right:120px;top:100px;bottom:80px;display:flex;flex-direction:column;z-index:2}
+
+/* ===========================================
+   TYPOGRAPHY
+   =========================================== */
+.h2{font:800 62px/1.08 var(--disp);letter-spacing:-.02em;color:var(--ink);margin-bottom:14px;max-width:1600px}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font:400 28px/1.45 var(--body);color:var(--muted);max-width:1500px}
+.lead b{color:var(--ink);font-weight:600}
+.eyebrow{font:500 20px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.mono{font-family:var(--mono)}
+.src{font:400 17px/1.4 var(--mono);color:var(--faint);margin-top:14px}
+.src a{color:var(--muted)}
+.note{font:400 21px/1.45 var(--body);color:var(--muted)}
+.serif{font-family:var(--serif);font-style:italic;font-weight:500}
+b,strong{font-weight:600}
+.k-blue{color:var(--blue)} .k-purple{color:var(--purple)} .k-pink{color:var(--pink)} .k-muted{color:var(--muted)}
+
+/* ===========================================
+   LAYOUT HELPERS
+   =========================================== */
+.row{display:flex;gap:56px}
+.row.grow{flex:1;align-items:center;min-height:0}
+.col{display:flex;flex-direction:column;gap:22px;min-width:0}
+.f1{flex:1} .f12{flex:1.2} .f14{flex:1.4} .f08{flex:.8}
+.stack{display:flex;flex-direction:column;gap:18px}
+.center-y{margin:auto 0}
+
+/* ===========================================
+   CARDS, PILLS, CHIPS
+   =========================================== */
+.card{background:#fff;border:1.5px solid var(--line);border-radius:22px;padding:28px 34px;box-shadow:0 14px 40px rgba(3,8,21,.06)}
+.card h4{font:700 30px/1.2 var(--disp);margin-bottom:10px;letter-spacing:-.01em}
+.card p,.card li{font:400 24px/1.48 var(--body);color:var(--ink)}
+.card p+p{margin-top:8px}
+.card .lbl{font:500 17px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:12px;display:block}
+.card.ok .lbl{color:var(--blue)} .card.no .lbl{color:var(--pink)}
+.card.soft{background:var(--bg-2)}
+.card.gradb{border:none;background:var(--grad-v);color:#fff}
+.card.gradb p,.card.gradb li,.card.gradb h4{color:#fff}
+.card.gradb .lbl{color:rgba(255,255,255,.8)}
+.pill{display:inline-flex;align-items:center;gap:8px;font:500 20px/1 var(--mono);padding:10px 16px;border-radius:999px;border:1.5px solid var(--line-2);background:#fff;color:var(--ink);white-space:nowrap}
+.pill.blue{border-color:transparent;background:rgba(6,147,227,.1);color:var(--blue-deep)}
+.pill.grad{border-color:transparent;background:var(--grad);color:#fff}
+.pill.ghost{background:transparent;color:var(--muted)}
+ul.clean{list-style:none}
+ul.clean li{position:relative;padding-left:34px;margin:10px 0;font:400 24px/1.45 var(--body)}
+ul.clean li::before{content:"";position:absolute;left:4px;top:.55em;width:12px;height:12px;border-radius:3px;background:var(--grad)}
+ul.ok li::before{content:"✓";background:none;color:var(--blue);font:700 24px/1 var(--body);top:.15em;left:0}
+ul.no li::before{content:"✗";background:none;color:var(--pink);font:700 24px/1 var(--body);top:.15em;left:0}
+.num{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:var(--grad);color:#fff;font:700 22px/1 var(--disp);flex:none}
+.btn{font:600 21px/1 var(--body);padding:14px 22px;border-radius:12px;border:1.5px solid var(--line-2);background:#fff;color:var(--ink);cursor:pointer;transition:all .2s}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn.primary{background:var(--grad);border-color:transparent;color:#fff}
+.btn.primary:hover{filter:brightness(1.08);color:#fff}
+.btn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.btnrow{display:flex;gap:12px;flex-wrap:wrap}
+
+/* ===========================================
+   SCREENSHOT FRAME (khung trình duyệt)
+   =========================================== */
+.shot{border-radius:16px;overflow:hidden;border:1.5px solid var(--line-2);box-shadow:0 26px 60px rgba(3,8,21,.14);background:#fff;flex:none}
+.shot .bar{height:40px;background:var(--bg-3);display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid var(--line)}
+.shot .bar i{width:12px;height:12px;border-radius:50%;background:var(--line-2)}
+.shot .bar span{margin-left:14px;font:500 15px/1 var(--mono);color:var(--muted);background:#fff;border-radius:8px;padding:6px 14px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shot img{display:block;width:100%;height:auto}
+.cap{font:400 19px/1.4 var(--body);color:var(--muted);margin-top:12px}
+.cap b{color:var(--ink)}
+
+/* ===========================================
+   TABLE
+   =========================================== */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font:400 22px/1.35 var(--body)}
+.tbl th{font:500 16px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:left;padding:0 16px 12px;border-bottom:2px solid var(--line)}
+.tbl td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td.m{font-family:var(--mono);font-size:20px}
+.tbl .pri{display:inline-block;font:600 17px/1 var(--mono);padding:7px 12px;border-radius:8px;white-space:nowrap}
+.pri.hi{background:var(--grad);color:#fff}
+.pri.mid{background:rgba(6,147,227,.12);color:var(--blue-deep)}
+.pri.keep{background:var(--bg-3);color:var(--ink)}
+.pri.stop{background:rgba(239,0,75,.1);color:var(--pink)}
+
+/* ===========================================
+   REVEAL ANIMATION (gắn với .slide.visible)
+   =========================================== */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.slide.visible .reveal{opacity:1;transform:none}
+.slide.visible .d1{transition-delay:.08s}.slide.visible .d2{transition-delay:.18s}.slide.visible .d3{transition-delay:.28s}
+.slide.visible .d4{transition-delay:.38s}.slide.visible .d5{transition-delay:.48s}.slide.visible .d6{transition-delay:.58s}
+.qa .reveal{opacity:1!important;transform:none!important;transition:none!important}
+
+/* ===========================================
+   S01 — COVER
+   =========================================== */
+.s-cover .cover-l{position:absolute;left:120px;top:200px;width:880px;z-index:2}
+.s-cover h1{font:800 168px/.92 var(--disp);letter-spacing:-.035em;margin:30px 0 34px}
+.s-cover .cover-sub{font:400 32px/1.45 var(--body);color:var(--muted);max-width:800px}
+.s-cover .cover-meta{display:flex;gap:14px;margin-top:40px;flex-wrap:wrap}
+.kt{color:var(--pink);background:rgba(239,0,75,.08);border-radius:4px;padding:0 3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.s-cover .kt-legend{margin-top:22px;font-size:20px;color:var(--muted)}
+.card.gradb .kt,.rep-card .kt,.stat.hl .kt,.pcard.g .kt,.ccenter .kt,#qtip .kt,.pri.hi .kt,.st.up .kt{background:#fff;color:var(--pink);font-weight:600}
+.s-cover .cover-r{position:absolute;right:120px;top:250px;width:700px;z-index:2}
+.qbox{display:flex;align-items:center;gap:18px;height:92px;padding:0 30px;background:#fff;border:2px solid var(--line-2);border-radius:46px;box-shadow:0 20px 50px rgba(3,8,21,.10);font:500 34px/1 var(--body)}
+.qbox svg{width:34px;height:34px;flex:none}
+.typed{display:inline-block;overflow:hidden;white-space:nowrap;width:0;border-right:3px solid var(--blue);font:500 32px/1.2 var(--mono)}
+.slide.visible .typed{animation:typing 1.6s steps(16) .5s forwards,blink .8s step-end 2.1s 4}
+@keyframes typing{to{width:16ch}}
+@keyframes blink{50%{border-color:transparent}}
+.qa .typed{width:16ch;animation:none}
+.tokens{display:flex;gap:16px;margin:36px 0 0 34px}
+.tk{display:flex;flex-direction:column;align-items:center;gap:10px;font:600 30px/1 var(--mono);padding:18px 24px;border-radius:16px;border:2px dashed var(--line-2);background:#fff;opacity:0;transform:translateY(12px);transition:all .6s var(--ease)}
+.tk small{font:500 16px/1 var(--mono);letter-spacing:.06em;color:var(--faint);text-transform:uppercase}
+.tk.known{border:2px solid var(--blue);color:var(--blue-deep)}
+.tk.op{border:2px solid var(--purple);color:var(--purple)}
+.slide.visible .tk{opacity:1;transform:none}
+.slide.visible .tk:nth-child(1){transition-delay:2.3s}.slide.visible .tk:nth-child(2){transition-delay:2.5s}.slide.visible .tk:nth-child(3){transition-delay:2.7s}
+.arrow-down{width:3px;height:56px;margin:22px 0 22px 120px;background:var(--grad);opacity:0;transition:opacity .5s 3s}
+.slide.visible .arrow-down{opacity:1}
+.rep-card{padding:28px 32px;border-radius:20px;background:var(--grad-v);color:#fff;box-shadow:0 24px 50px rgba(153,0,239,.22);opacity:0;transform:translateY(12px);transition:all .7s var(--ease) 3.3s}
+.slide.visible .rep-card{opacity:1;transform:none}
+.rep-card .mono{font-size:17px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.rep-card .rep{font:600 32px/1.3 var(--body);margin-top:10px}
+.qa .tk,.qa .arrow-down,.qa .rep-card{opacity:1!important;transform:none!important;transition:none!important}
+
+/* ===========================================
+   S02 — CASE WRIAI
+   =========================================== */
+.case-grid{display:grid;grid-template-columns:470px 640px 1fr;gap:44px;align-items:center}
+.case-stats{display:flex;flex-direction:column;gap:16px}
+.stat{padding:20px 26px;border-radius:18px;background:var(--bg-2);border:1.5px solid var(--line)}
+.stat .v{font:800 52px/1 var(--disp);letter-spacing:-.02em}
+.stat .t{font:400 21px/1.35 var(--body);color:var(--muted);margin-top:8px}
+.stat.hl{background:var(--grad-v);border:none}
+.stat.hl .v,.stat.hl .t{color:#fff}
+
+/* ===========================================
+   S03 — QUERY TRANSFORMER (interactive)
+   =========================================== */
+.qt-tabs{display:flex;gap:12px;margin:6px 0 20px}
+.qt{display:flex;flex-direction:column;gap:12px}
+.qt-row{display:grid;grid-template-columns:330px 1fr;gap:28px;align-items:center;padding:16px 24px;border-radius:18px;border:1.5px solid var(--line);background:#fff;opacity:.18;filter:grayscale(1);transition:all .5s var(--ease)}
+.qt-row.on{opacity:1;filter:none;box-shadow:0 10px 30px rgba(3,8,21,.06)}
+.qt-row.cur{border-color:var(--blue)}
+.qt-k{display:flex;align-items:center;gap:16px}
+.qt-k .n{font:700 22px/1 var(--disp);color:#fff;background:var(--grad);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.qt-k .t{font:700 24px/1.15 var(--disp)}
+.qt-k .t small{display:block;font:500 15px/1.3 var(--mono);color:var(--faint);letter-spacing:.06em;margin-top:5px;text-transform:uppercase}
+.qt-v{font:400 24px/1.4 var(--body);display:flex;flex-wrap:wrap;gap:10px;align-items:center;min-height:52px}
+.qt-v .typedq{font:600 30px/1 var(--mono);padding:10px 22px;border:2px solid var(--line-2);border-radius:30px}
+.seg{display:inline-flex;flex-direction:column;align-items:center;gap:6px;font:600 25px/1 var(--mono);padding:10px 18px;border-radius:12px;border:2px solid var(--line-2)}
+.seg small{font:500 14px/1 var(--mono);color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+.seg.c1{border-color:var(--purple);color:var(--purple)} .seg.c2{border-color:var(--blue);color:var(--blue-deep)} .seg.c3{border-color:var(--ink)}
+.augp{font:500 20px/1 var(--mono);padding:10px 16px;border-radius:999px;background:rgba(6,147,227,.09);color:var(--blue-deep)}
+.repq{font:600 27px/1.3 var(--body);padding:10px 22px;border-radius:14px;background:var(--grad);color:#fff}
+.ibars{display:flex;flex-direction:column;gap:7px;width:100%}
+.ibar{display:grid;grid-template-columns:300px 1fr 64px;gap:14px;align-items:center;font:400 20px/1 var(--body)}
+.ibar .tr{height:14px;border-radius:7px;background:var(--bg-3);overflow:hidden}
+.ibar .tr i{display:block;height:100%;border-radius:7px;background:var(--grad);width:0;transition:width .8s var(--ease)}
+.ibar .p{font:600 19px/1 var(--mono);color:var(--muted)}
+.qt-ctrl{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+
+/* ===========================================
+   S04 — PIPELINE 8 TRẠM (SVG, click)
+   =========================================== */
+.pipe-svg{width:1680px;height:290px;display:block}
+.pnode{cursor:pointer}
+.pnode circle{fill:#fff;stroke:var(--line-2);stroke-width:3;transition:all .3s}
+.pnode .pn{font:700 30px var(--disp);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.pnode .pl{font:700 24px var(--disp);fill:var(--ink);text-anchor:middle}
+.pnode .ps{font:400 19px var(--body);fill:var(--muted);text-anchor:middle}
+.pnode:hover circle{stroke:var(--blue)}
+.pnode.sel circle{fill:url(#pg);stroke:none}
+.pnode.sel .pn{fill:#fff}
+.pnode.grp2 circle{stroke-dasharray:6 6}
+.pipe-detail{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:14px}
+.pipe-detail .card{min-height:250px}
+.pipe-detail .card p{font-size:23px}
+
+/* ===========================================
+   S05 — CANONICAL QUERY (SVG lines + chips)
+   =========================================== */
+.canon{position:relative;width:1000px;height:640px;flex:none}
+.canon svg{position:absolute;inset:0;width:1000px;height:640px}
+.canon line{stroke:url(#cg);stroke-width:2.5;stroke-dasharray:420;stroke-dashoffset:420;transition:stroke-dashoffset 1.2s var(--ease)}
+.slide.visible .canon line{stroke-dashoffset:0}
+.qa .canon line{stroke-dashoffset:0;transition:none}
+.cchip{position:absolute;transform:translate(-50%,-50%);max-width:330px;text-align:center;font:500 21px/1.3 var(--mono);padding:12px 18px;border-radius:14px;background:#fff;border:1.5px solid var(--line-2);box-shadow:0 8px 20px rgba(3,8,21,.06)}
+.ccenter{position:absolute;left:500px;top:320px;transform:translate(-50%,-50%);width:400px;padding:26px 28px;border-radius:24px;background:var(--grad-v);color:#fff;text-align:center;box-shadow:0 24px 60px rgba(6,147,227,.3)}
+.slide.visible .ccenter{animation:pulse 2.6s ease-in-out 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 24px 80px rgba(153,0,239,.45)}}
+.ccenter .mono{font-size:16px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.ccenter .c{font:700 29px/1.25 var(--disp);margin-top:10px}
+
+/* ===========================================
+   S06 — SERP COMPOSITION
+   =========================================== */
+.serp3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.serpc{background:#fff;border:1.5px solid var(--line);border-radius:22px;padding:22px 24px;box-shadow:0 14px 40px rgba(3,8,21,.05)}
+.serpc .q{font:700 26px/1.2 var(--disp)}
+.serpc .d{font:400 15px/1 var(--mono);color:var(--faint);margin:8px 0 14px}
+.sr{display:grid;grid-template-columns:34px 150px 1fr 54px;gap:10px;align-items:center;height:41px;font:400 19px/1 var(--body);border-bottom:1px dashed var(--line)}
+.sr .p{font:600 17px var(--mono);color:var(--faint)}
+.sr .ty{font:600 15px/1 var(--mono);padding:7px 9px;border-radius:7px;text-align:center;white-space:nowrap}
+.sr .dm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.sr .dr{font:500 16px var(--mono);color:var(--muted);text-align:right}
+.sr.me{background:rgba(6,147,227,.07);border-radius:10px;border-bottom-color:transparent}
+.sr.me .dm{font-weight:700;color:var(--blue-deep)}
+.ty.list{background:rgba(153,0,239,.12);color:var(--purple)}
+.ty.cmp{background:rgba(6,147,227,.14);color:var(--blue-deep)}
+.ty.svc{background:var(--ink);color:#fff}
+.ty.guide{background:var(--bg-3);color:var(--muted)}
+.ty.vid{background:#FFE4EC;color:var(--pink)}
+.ty.disc{background:var(--bg-3);color:var(--ink)}
+.ty.aio{background:var(--grad);color:#fff}
+.ty.loc{border:1.5px solid var(--line-2);color:var(--muted)}
+.serpc .verdict{margin-top:14px;padding:14px 16px;border-radius:14px;background:var(--bg-2);font:400 20px/1.4 var(--body)}
+.serpc .verdict b{color:var(--blue-deep)}
+
+/* ===========================================
+   S07 — QUERY TEMPLATE (ripple)
+   =========================================== */
+.tpl-line{font:700 40px/1.2 var(--mono);letter-spacing:-.01em;margin-bottom:22px}
+.tpl-line .slot{display:inline-block;padding:2px 18px;border-radius:12px;background:var(--grad);color:#fff}
+.tchips{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.tchip{position:relative;padding:16px 16px 14px;border-radius:16px;border:1.5px solid var(--line);background:#fff;cursor:pointer;transition:all .45s var(--ease)}
+.tchip .v{font:600 23px/1.2 var(--body)}
+.tchip .m{font:500 16px/1 var(--mono);color:var(--faint);margin-top:8px}
+.tchip .rk{position:absolute;top:12px;right:12px;font:700 17px/1 var(--mono);padding:5px 8px;border-radius:8px;background:var(--bg-3);color:var(--muted)}
+.tchip.top .rk{background:rgba(6,147,227,.14);color:var(--blue-deep)}
+.tchip.lit{border-color:transparent;background:linear-gradient(#fff,#fff) padding-box,var(--grad) border-box;border:2px solid transparent;box-shadow:0 10px 30px rgba(6,147,227,.18)}
+.tchip.seed{background:var(--grad-v);color:#fff;border-color:transparent}
+.tchip.seed .m{color:rgba(255,255,255,.85)}
+.tchip.seed .rk{background:rgba(255,255,255,.25);color:#fff}
+.tchip.nodata .v{color:var(--muted)}
+.tpl-msg{margin-top:18px;font:500 22px/1.4 var(--body);color:var(--blue-deep);min-height:31px}
+.quote{font:500 34px/1.3 var(--serif);font-style:italic;color:var(--ink);padding-left:26px;border-left:4px solid var(--purple)}
+.quote small{display:block;font:400 18px/1.4 var(--mono);font-style:normal;color:var(--faint);margin-top:12px}
+
+/* ===========================================
+   S08 — ENTITY GRAPH (SVG)
+   =========================================== */
+.eg{width:940px;height:640px;flex:none}
+.eg .tnode rect{fill:var(--ink)}
+.eg .tnode text{fill:#fff;font:700 28px var(--disp);text-anchor:middle;dominant-baseline:central}
+.eg .tnode .tl{font:500 14px var(--mono);letter-spacing:.14em;fill:rgba(255,255,255,.7)}
+.eg .kn circle{fill:#fff;stroke:var(--blue);stroke-width:3}
+.eg .kn text{font:700 23px var(--disp);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.eg .isa{stroke:var(--line-2);stroke-width:2.5}
+.eg .vs{stroke:url(#eg-g);stroke-width:4;stroke-dasharray:330;stroke-dashoffset:330;transition:stroke-dashoffset 1s var(--ease)}
+.eg .vsl{font:700 21px var(--mono);fill:var(--purple);opacity:0;transition:opacity .4s}
+.eg .infer{stroke:var(--purple);stroke-width:3;stroke-dasharray:8 8;opacity:0;transition:opacity .6s}
+.eg .inferl{font:600 19px var(--mono);fill:var(--purple);opacity:0;transition:opacity .6s}
+.eg .wn circle{fill:#fff;stroke:var(--faint);stroke-width:3;stroke-dasharray:10 8;transition:all .6s}
+.eg .wn .wt{font:800 32px var(--disp);fill:var(--ink);text-anchor:middle;transition:fill .6s}
+.eg .wn .ws{font:500 16px var(--mono);fill:var(--faint);text-anchor:middle;transition:fill .6s}
+.eg.run .vs{stroke-dashoffset:0}
+.eg.run .vs.e2{transition-delay:.35s}.eg.run .vs.e3{transition-delay:.7s}.eg.run .vs.e4{transition-delay:1.05s}
+.eg.run .vsl{opacity:1;transition-delay:1.2s}
+.eg.run .wn circle{fill:url(#eg-g);stroke:none;transition-delay:1.6s}
+.eg.run .wn .wt,.eg.run .wn .ws{fill:#fff;transition-delay:1.6s}
+.eg.run .infer,.eg.run .inferl{opacity:1;transition-delay:2.1s}
+.eg .ws2{opacity:0;transition:opacity .4s}
+.eg.run .ws1{opacity:0} .eg.run .ws2{opacity:1;transition-delay:1.7s}
+
+/* ===========================================
+   S09 — FAN-OUT → AI OVERVIEW
+   =========================================== */
+.fan{position:relative;width:1680px;height:500px}
+.fan svg{position:absolute;inset:0;width:1680px;height:500px}
+.fan path{fill:none;stroke:url(#fg);stroke-width:2.5;stroke-dasharray:600;stroke-dashoffset:600}
+.slide.visible .fan path{animation:draw 1s var(--ease) forwards}
+.slide.visible .fan path.b{animation-delay:1.2s}
+.slide.visible .fan path.c{animation-delay:2.2s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.qa .fan path{stroke-dashoffset:0;animation:none}
+.fan .prompt{position:absolute;left:0;top:170px;width:330px;padding:24px 26px;border-radius:20px;background:var(--ink);color:#fff}
+.fan .prompt .mono{font-size:15px;letter-spacing:.12em;opacity:.65;text-transform:uppercase}
+.fan .prompt p{font:600 27px/1.3 var(--body);margin-top:10px}
+.fan .sq{position:absolute;left:470px;width:380px;height:56px;display:flex;align-items:center;padding:0 18px;border-radius:14px;background:#fff;border:1.5px solid var(--line-2);font:500 20px/1 var(--mono);opacity:0;transform:translateX(-10px);transition:all .5s var(--ease)}
+.slide.visible .fan .sq{opacity:1;transform:none}
+.fan .srcs{position:absolute;left:990px;width:270px;height:52px;display:flex;align-items:center;gap:10px;padding:0 16px;border-radius:12px;background:var(--bg-2);border:1.5px solid var(--line);font:500 19px/1 var(--mono);opacity:0;transition:opacity .5s}
+.fan .srcs.me{background:rgba(6,147,227,.1);border-color:var(--blue);color:var(--blue-deep);font-weight:600}
+.slide.visible .fan .srcs{opacity:1;transition-delay:1.6s}
+.fan .aio{position:absolute;left:1340px;top:95px;width:340px;padding:24px;border-radius:20px;background:#fff;border:1.5px solid var(--line);box-shadow:0 20px 50px rgba(3,8,21,.1);opacity:0;transition:opacity .6s 2.6s}
+.slide.visible .fan .aio{opacity:1}
+.qa .fan .sq,.qa .fan .srcs,.qa .fan .aio{opacity:1;transform:none;transition:none}
+.aio .h{display:flex;align-items:center;gap:10px;font:600 15px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--blue)}
+.aio .spark{width:16px;height:16px;border-radius:50%;background:var(--grad)}
+.aio .ln{height:11px;border-radius:6px;background:var(--bg-3);margin-top:13px;position:relative;overflow:hidden}
+.aio .ln::after{content:"";position:absolute;inset:0;background:var(--grad);transform-origin:left;transform:scaleX(0);transition:transform 1s var(--ease) 2.9s}
+.slide.visible .aio .ln::after{transform:scaleX(1)}
+.qa .aio .ln::after{transform:scaleX(1);transition:none}
+.aio .ln.s{width:64%}
+.aio .cites{display:flex;flex-direction:column;gap:9px;margin-top:20px}
+.aio .cite{font:500 16px/1.3 var(--body);padding:10px 12px;border-radius:10px;border:1.5px solid var(--line)}
+.aio .cite b{color:var(--blue-deep)}
+.facts3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:10px}
+.facts3 .card{padding:22px 26px}
+.facts3 .card p{font-size:21px}
+
+/* ===========================================
+   S10 — ANATOMY
+   =========================================== */
+.anat{display:flex;flex-direction:column;gap:12px}
+.anat .st{display:grid;grid-template-columns:58px 1fr;gap:18px;align-items:start;padding:14px 20px;border-radius:16px;background:#fff;border:1.5px solid var(--line)}
+.anat .st .num{width:44px;height:44px;font-size:21px}
+.anat .st p{font:400 22px/1.42 var(--body)}
+.anat .st p b{font-weight:700}
+.anat .st.res{background:var(--grad-v);border:none}
+.anat .st.res p{color:#fff}
+
+/* ===========================================
+   S11 — RISKS
+   =========================================== */
+.risk3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.risk3 .card p{font-size:22px}
+.risk3 .big{font:800 46px/1 var(--disp);letter-spacing:-.02em;margin:4px 0 10px}
+.dodont{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:26px}
+.dodont ul li{font-size:23px;margin:8px 0}
+
+/* ===========================================
+   S12 — BEAT (gradient section break)
+   =========================================== */
+.s-beat{background:var(--grad-v)!important;color:#fff}
+.s-beat .beat{position:absolute;left:160px;top:50%;transform:translateY(-50%);z-index:2}
+.s-beat .eyebrow{color:rgba(255,255,255,.8)}
+.s-beat h2{font:800 132px/.98 var(--disp);letter-spacing:-.03em;margin:26px 0 30px;color:#fff}
+.s-beat p{font:400 32px/1.45 var(--body);color:rgba(255,255,255,.88);max-width:1200px}
+.s-beat .chrome,.s-beat .foot{color:rgba(255,255,255,.6)}
+.s-beat .chrome .sec,.s-beat .chrome .sec b{color:#fff}
+.beat-rings{position:absolute;right:-220px;top:50%;transform:translateY(-50%);width:900px;height:900px;border-radius:50%;border:2px solid rgba(255,255,255,.18);box-shadow:0 0 0 90px rgba(255,255,255,.05),0 0 0 200px rgba(255,255,255,.04)}
+
+/* ===========================================
+   S13 — 6-STEP PROCESS
+   =========================================== */
+.steps6{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.step{position:relative;padding:28px 30px 26px;border-radius:22px;background:#fff;border:1.5px solid var(--line);box-shadow:0 12px 34px rgba(3,8,21,.05)}
+.step .hd{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.step h4{font:700 30px/1.15 var(--disp)}
+.step p{font:400 22px/1.45 var(--body);color:var(--ink)}
+.step .out{margin-top:14px;font:500 17px/1.35 var(--mono);color:var(--blue-deep);padding:10px 14px;border-radius:10px;background:rgba(6,147,227,.08)}
+
+/* ===========================================
+   S14 — QUERY BUILDER (interactive)
+   =========================================== */
+.qb{display:grid;grid-template-columns:640px 1fr;gap:40px;flex:1;min-height:0;margin-top:8px}
+.qb-form{display:flex;flex-direction:column;gap:12px}
+.qb-form label{font:500 15px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:6px}
+.qb-form input[type=text]{width:100%;font:500 21px/1 var(--body);padding:12px 16px;border-radius:12px;border:1.5px solid var(--line-2);background:#fff;color:var(--ink);outline:none}
+.qb-form input[type=text]:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(6,147,227,.12)}
+.qb-tpls{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:4px}
+.qb-tpls label{display:flex;align-items:center;gap:10px;font:500 18px/1.2 var(--mono);text-transform:none;letter-spacing:0;color:var(--ink);margin:0;cursor:pointer}
+.qb-tpls input{width:20px;height:20px;accent-color:#0693E3}
+.qb-out{background:var(--bg-2);border:1.5px solid var(--line);border-radius:22px;padding:24px 28px;display:flex;flex-direction:column;min-height:0}
+.qb-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.qb-head .tot{font:800 44px/1 var(--disp)}
+.qb-groups{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;overflow:hidden;align-content:start;flex:1}
+.qb-g h5{font:600 16px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--blue-deep);margin-bottom:8px}
+.qb-g h5 span{color:var(--faint)}
+.qb-g ul{list-style:none}
+.qb-g li{font:400 19px/1.25 var(--mono);padding:5px 0;border-bottom:1px dashed var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qb-g li.more{color:var(--faint);border:none}
+
+/* ===========================================
+   S15/S20 — SITE CONTEXT
+   =========================================== */
+.facts{display:flex;flex-direction:column;gap:16px}
+.fact{display:grid;grid-template-columns:170px 1fr;gap:18px;padding:16px 0;border-bottom:1px solid var(--line)}
+.fact .k{font:500 16px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding-top:4px}
+.fact .v{font:400 23px/1.45 var(--body)}
+.fact:last-child{border-bottom:none}
+.ent-pills{display:flex;flex-wrap:wrap;gap:8px}
+.ent-pills .pill{font-size:17px;padding:8px 12px}
+
+/* ===========================================
+   S16 — BAR CHART (SVG)
+   =========================================== */
+.bars{width:900px;height:600px;flex:none}
+.bars .lb{font:500 22px var(--body);fill:var(--ink);text-anchor:end;dominant-baseline:central}
+.bars .vl{font:600 19px var(--mono);fill:var(--muted);dominant-baseline:central}
+.bars .bar{fill:url(#bg-g);transform-box:fill-box;transform-origin:left center;transform:scaleX(0);transition:transform 1s var(--ease)}
+.slide.visible .bars .bar{transform:scaleX(1)}
+.qa .bars .bar{transform:scaleX(1);transition:none}
+.bars .rk circle{fill:var(--blue)}
+.bars .rk.mid circle{fill:var(--purple)}
+.bars .rk.low circle{fill:var(--faint)}
+.bars .rk text{font:700 19px var(--mono);fill:#fff;text-anchor:middle;dominant-baseline:central}
+.bars .hd{font:500 15px var(--mono);fill:var(--faint);letter-spacing:.1em}
+.bars .grid{stroke:var(--line);stroke-width:1}
+
+/* ===========================================
+   S17 — ENTITY MAP (HTML + SVG lines, click)
+   =========================================== */
+.emap{position:relative;width:1000px;height:680px;flex:none}
+.emap svg{position:absolute;inset:0;width:1000px;height:680px}
+.emap svg line{stroke:var(--line-2);stroke-width:3;transition:stroke .3s}
+.emap svg line.on{stroke:url(#em-g);stroke-width:4}
+.ecore{position:absolute;left:500px;top:340px;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;background:var(--grad-v);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 24px 60px rgba(6,147,227,.32)}
+.ecore b{font:800 30px/1.1 var(--disp)}
+.ecore span{font:500 14px/1.2 var(--mono);opacity:.8;margin-top:6px;letter-spacing:.08em}
+.eclu{position:absolute;width:380px;padding:20px 22px;border-radius:20px;background:#fff;border:1.5px solid var(--line);box-shadow:0 12px 34px rgba(3,8,21,.06);cursor:pointer;transition:all .3s}
+.eclu:hover{border-color:var(--blue)}
+.eclu.on{border-color:transparent;background:linear-gradient(#fff,#fff) padding-box,var(--grad) border-box;border:2px solid transparent;box-shadow:0 18px 44px rgba(6,147,227,.2)}
+.eclu h5{font:700 26px/1.1 var(--disp);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.eclu h5 span{font:500 15px var(--mono);color:var(--faint)}
+.epanel .card{min-height:560px}
+.epanel .qlist{list-style:none;margin-top:6px}
+.epanel .qlist li{font:500 20px/1.3 var(--mono);padding:10px 14px;border-radius:10px;background:var(--bg-2);margin:8px 0}
+.epanel .st{margin-top:16px;padding:14px 16px;border-radius:12px;background:rgba(6,147,227,.08);font:400 21px/1.4 var(--body);color:var(--blue-deep)}
+
+/* ===========================================
+   S19 — QUERY AUGMENTATION MAP (wireframe + table)
+   =========================================== */
+.wf{width:520px;flex:none;border-radius:18px;border:1.5px solid var(--line-2);background:#fff;padding:16px;box-shadow:0 20px 50px rgba(3,8,21,.08)}
+.wf .nav{height:30px;border-radius:8px;background:var(--bg-3);margin-bottom:12px;display:flex;align-items:center;padding:0 12px;font:500 14px var(--mono);color:var(--faint)}
+.wb{border-radius:12px;border:1.5px dashed var(--line-2);background:var(--bg-2);margin-bottom:10px;padding:12px 16px;font:600 19px/1.25 var(--body);color:var(--muted);display:flex;align-items:center;justify-content:space-between;transition:all .3s;cursor:default}
+.wb small{font:500 14px var(--mono);color:var(--faint)}
+.wb.h1{height:150px;align-items:flex-start;flex-direction:column;justify-content:space-between}
+.wb.h1 .gal{display:flex;gap:8px;width:100%}
+.wb.h1 .gal i{flex:1;height:58px;border-radius:8px;background:var(--line)}
+.wb.hl{border:2px solid var(--blue);background:rgba(6,147,227,.08);color:var(--blue-deep)}
+.wb.hl .gal i{background:rgba(6,147,227,.25)}
+.augt tr{transition:background .3s;cursor:default}
+.augt tr.hl td{background:rgba(6,147,227,.07)}
+.augt td{font-size:20px;padding:12px 14px}
+.augt td.m{font-size:18px}
+.augt td .k{display:inline-flex;width:30px;height:30px;border-radius:50%;background:var(--grad);color:#fff;font:700 16px/1 var(--disp);align-items:center;justify-content:center}
+
+/* ===========================================
+   S21 — GTV PAIR GRAPH (SVG)
+   =========================================== */
+.pg{width:760px;height:600px;flex:none}
+.pg line{stroke:url(#pg-l);stroke-width:3;stroke-dasharray:6 7}
+.pg .core circle{fill:url(#pg-g)}
+.pg .core text{fill:#fff;font:800 30px var(--disp);text-anchor:middle;dominant-baseline:central}
+.pg .core .s{font:500 14px var(--mono);letter-spacing:.1em;fill:rgba(255,255,255,.8)}
+.pg .pr rect{fill:#fff;stroke:var(--line-2);stroke-width:2}
+.pg .pr text{font:700 23px var(--disp);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.pg .pr .v{font:500 16px var(--mono);fill:var(--muted)}
+
+/* ===========================================
+   S22 — MEASURE
+   =========================================== */
+code.rx{font:500 19px/1.35 var(--mono);background:var(--ink);color:#7DD3FC;padding:6px 10px;border-radius:8px;white-space:nowrap}
+.tline{display:flex;flex-direction:column;gap:18px}
+.tl-i{display:grid;grid-template-columns:120px 1fr;gap:20px;align-items:start}
+.tl-i .d{font:800 30px/1 var(--disp);color:var(--blue);padding-top:4px}
+.tl-i p{font:400 22px/1.45 var(--body)}
+
+/* ===========================================
+   S23 — CHECKLIST
+   =========================================== */
+.chk{list-style:none}
+.chk li{display:flex;gap:16px;align-items:flex-start;font:400 23px/1.4 var(--body);padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.chk li i{flex:none;width:28px;height:28px;border-radius:8px;border:2px solid var(--line-2);margin-top:2px;display:flex;align-items:center;justify-content:center;font:700 18px/1 var(--body);color:#fff;font-style:normal;transition:all .2s}
+.chk li.done i{background:var(--grad);border-color:transparent}
+.chk li.done i::after{content:"✓"}
+.chk li.done span{color:var(--muted)}
+.hw ol{margin-left:30px}
+.hw li{font:400 24px/1.45 var(--body);margin:10px 0;color:#fff}
+
+/* ===========================================
+   S24 — SOURCES
+   =========================================== */
+.srcs2{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.srcs2 h4{font:700 28px/1.2 var(--disp);margin-bottom:14px}
+.srcs2 li{font:400 20px/1.45 var(--body);margin:7px 0 7px 24px;color:var(--ink)}
+.srcs2 li a{color:var(--blue-deep);text-decoration:none;border-bottom:1px solid rgba(6,147,227,.3)}
+.srcs2 li span{color:var(--muted)}
+
+/* ===========================================
+   DECK CONTROLS (ngoài stage)
+   =========================================== */
+.deck-controls{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:999px;background:rgba(11,15,26,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:.25;transition:opacity .3s}
+.deck-controls:hover{opacity:1}
+.deck-controls button{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;font:600 16px/1 var(--body);cursor:pointer}
+.deck-controls span{font:500 13px/1 var(--mono);color:#fff;min-width:64px;text-align:center}
+.progress{position:fixed;left:0;top:0;height:3px;background:var(--grad);z-index:1001;transition:width .4s var(--ease)}
+
+/* ===========================================
+   NÚT SỬA CHỮ + NÚT TẢI SLIDE (ngoài stage)
+   =========================================== */
+[hidden]{display:none!important}
+#edit{position:fixed;top:14px;left:14px;z-index:1002;font:600 13px/1 var(--body);padding:9px 14px;border-radius:999px;border:none;background:rgba(11,15,26,.72);color:#fff;cursor:pointer;opacity:.35;transition:opacity .3s}
+#edit:hover,#edit.on{opacity:1}
+#edit.on{background:var(--blue)}
+.dl-btn{position:fixed;top:14px;right:14px;z-index:1002;display:inline-flex;align-items:center;gap:8px;font:600 14px/1 var(--body);padding:10px 16px;border-radius:999px;background:var(--grad);color:#fff;text-decoration:none;box-shadow:0 8px 24px rgba(6,147,227,.35);opacity:.85;transition:opacity .3s}
+.dl-btn:hover{opacity:1}
+@media (max-width:900px){.dl-btn{top:6px;right:6px;padding:7px 11px;font-size:12px}#edit{top:6px;left:6px}}
+body.editing [contenteditable="true"]{outline:2px dashed rgba(6,147,227,.5);outline-offset:4px}
+
+.s-cover h1.sm{font-size:86px;line-height:1.02;margin:26px 0 30px}
+.typed.tq{font-size:27px}
+.slide.visible .typed.tq{animation:typingq 2.2s steps(var(--n)) .5s forwards,blink .8s step-end 2.7s 4}
+@keyframes typingq{to{width:var(--w)}}
+.qa .typed.tq{width:var(--w);animation:none}
+.pill.back{text-decoration:none;color:var(--blue-deep);border-color:var(--blue)}
+.tk.new{border:2px solid var(--pink);color:var(--pink)}
+.rep-sub{font:500 18px/1.4 var(--mono);margin-top:12px;opacity:.85}
+.flow3{display:flex;align-items:stretch;gap:24px;width:100%}
+.flow3 .stat{flex:1;padding:30px 32px}
+.flow3 .stat .v{font-size:84px}
+.flow3 .stat .t{font-size:23px}
+.farrow{display:flex;align-items:center;font:800 54px/1 var(--disp);color:var(--purple)}
+.tbl.tp10 td{font-size:18px;padding:9px 11px;line-height:1.3}
+.tbl.tp10.dense td{padding:7px 11px;font-size:17px}
+.tbl.tp10 td.m{font-size:16px}
+.tbl.tp10 td small{display:block;font:400 14px/1.3 var(--body);color:var(--muted);margin-top:3px}
+.tbl.tp10 a{color:var(--blue-deep);text-decoration:none;border-bottom:1.5px solid rgba(6,147,227,.35)}
+.tbl.patt td{font-size:17px;padding:10px 11px;line-height:1.35}.tbl.patt td.m{font-weight:600}
+.k-muted{color:var(--faint)}
+.beat-stats{display:flex;gap:56px;margin-top:10px;flex-wrap:wrap}
+.beat-stats div{display:flex;flex-direction:column;gap:10px}
+.beat-stats b{font:800 64px/1 var(--disp);color:#fff;letter-spacing:-.02em}
+.beat-stats span{font:500 19px/1.3 var(--mono);color:rgba(255,255,255,.82)}
+.legend{display:flex;gap:26px;align-items:center;font:500 17px/1 var(--mono);color:var(--muted);margin:6px 0 16px}
+.legend i{display:inline-block;width:18px;height:18px;border-radius:5px;margin-right:8px;vertical-align:-3px}
+.legend .lg-r{margin-left:auto}
+.t3{background:#0B5E94}.t10{background:#0693E3}.t20{background:rgba(153,0,239,.5)}.t50{background:#CBD5E1}.out{background:rgba(239,0,75,.28)}.nod{background:repeating-linear-gradient(45deg,#CBD5E1 0 8px,#E2E8F0 8px 16px)}
+.tbars{display:flex;flex-direction:column;gap:4px}
+.tb{display:grid;grid-template-columns:470px 1fr 110px 470px;gap:18px;align-items:center;height:44px}
+.tbars.dense{gap:2px}.tbars.dense .tb{height:38px}.tbars.dense .tl{font-size:17px}
+.tl{font:500 19px/1.15 var(--mono);color:var(--ink);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbar{display:flex;align-items:center;gap:12px;height:30px}
+.sb{display:flex;height:30px;border-radius:7px;overflow:hidden;transform-origin:left center;transform:scaleX(0);transition:transform 1s var(--ease) .3s}
+.slide.visible .sb{transform:scaleX(1)}.qa .sb{transform:scaleX(1);transition:none}
+.sb i{display:block;height:100%}
+.tn{font:600 19px var(--mono);color:var(--muted)}
+.tt{font:500 21px var(--mono);color:var(--faint);text-align:center}.tt b{color:var(--blue-deep);font-size:24px;margin-left:6px}.tt .ta{margin-right:6px}
+.ts{display:flex;align-items:center;gap:12px;min-width:0}
+.ts small{font:400 16px/1.2 var(--body);color:var(--muted)}
+.st{font:600 15px/1 var(--mono);padding:7px 10px;border-radius:7px;white-space:nowrap}
+.st.ok{background:rgba(6,147,227,.14);color:var(--blue-deep)}.st.up{background:var(--grad);color:#fff}.st.mid{background:var(--bg-3);color:var(--ink)}.st.no{background:rgba(239,0,75,.1);color:var(--pink)}
+.tabs{margin:2px 0 8px;flex-wrap:wrap}.tabs .btn{font-size:17px;padding:11px 15px}
+.tpl-line{font:700 34px/1.2 var(--disp);margin-bottom:6px}
+.s-tg .tchips{gap:11px}
+.s-tg .tchip{padding:12px 13px 11px}
+.s-tg .tchip .v{font-size:19px;padding-right:62px}
+.s-tg .tchip .m{font-size:14px}
+.s-tg .tchip .rk{font-size:16px}
+.tchip .rk.r3{background:#0B5E94;color:#fff}.tchip .rk.r10{background:rgba(6,147,227,.16);color:var(--blue-deep)}.tchip .rk.r20{background:rgba(153,0,239,.12);color:var(--purple)}.tchip .rk.r50,.tchip .rk.rout{background:var(--bg-3);color:var(--muted)}
+.tchip.gap{border:2px dashed var(--pink)}
+.tchip.seed .rk{background:rgba(255,255,255,.25)!important;color:#fff!important}
+.s-tg .tpl-msg{margin:0;font-size:19px}
+.rk{display:inline-block;font:700 15px/1 var(--mono);padding:4px 7px;border-radius:6px;margin-left:4px;vertical-align:1px}
+.rk.r3{background:#0B5E94;color:#fff}.rk.r10{background:rgba(6,147,227,.16);color:var(--blue-deep)}.rk.r20{background:rgba(153,0,239,.12);color:var(--purple)}.rk.r50,.rk.rout{background:var(--bg-3);color:var(--muted)}
+.tbl.cant td{font-size:18px;padding:12px 12px}.tbl.cant td.m{font-size:17px;font-weight:600}
+.ty.cat{background:rgba(6,147,227,.12);color:var(--blue-deep)}.ty.home{background:var(--bg-3);color:var(--ink)}
+.ty.prod{background:rgba(6,147,227,.2);color:var(--blue-deep)}.ty.local{background:rgba(153,0,239,.1);color:var(--purple)}.ty.forum,.ty.news,.ty.other{background:var(--bg-3);color:var(--muted)}
+.sr{grid-template-columns:40px 120px 1fr 54px}
+.mx{border-collapse:separate;border-spacing:0;flex:1}
+.mx th{font:500 15px/1.15 var(--mono);color:var(--faint);text-transform:uppercase;letter-spacing:.06em;padding:0 6px 12px;text-align:center;border-bottom:2px solid var(--line)}
+.mx th b{display:block;font:700 19px var(--disp);color:var(--ink);letter-spacing:0}
+.mx th small{display:block;font-size:13px;margin-top:4px}
+.mx th.nm,.mx td.nm{text-align:left}
+.mx td{padding:10px 6px;border-bottom:1px solid var(--line);text-align:center;cursor:pointer;transition:background .2s}
+.mx.dense td{padding:7px 6px}
+.mx td.nm{font:500 19px/1.2 var(--body);padding-left:12px;width:340px}
+.mx td.tp{font:600 16px var(--mono);color:var(--blue-deep)}
+.mx tr:hover td{background:var(--bg-2)}
+.mx tr.sel td{background:rgba(6,147,227,.08)}
+.dot{display:inline-block;width:22px;height:22px;border-radius:50%;vertical-align:middle}
+.dot.v0{background:transparent}.dot.v1{border:3px solid var(--purple)}.dot.v2{background:var(--grad)}
+.mxs{font:600 19px/1.35 var(--mono)!important;color:var(--blue-deep)!important;margin-bottom:8px}
+.mxlg{display:flex;gap:26px;font:500 17px var(--mono);color:var(--muted)}.mxlg i{margin-right:8px}
+.augt td.qs{font-size:16px;line-height:1.7}
+.wb{font-size:17px}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pair{border:1.5px solid var(--line);border-radius:18px;padding:16px 18px;background:#fff}
+.pe{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.pe span{font:700 21px/1 var(--disp);padding:9px 13px;border-radius:10px;background:var(--bg-3)}
+.pe b{font:600 16px var(--mono);color:var(--purple)}
+.pq div{font:400 17px/1.55 var(--body);color:var(--muted)}
+.tbl.gapt td{font-size:17px;padding:11px 12px;line-height:1.45}.tbl.gapt td.m{font-size:16px}
+.tbl.prt td{font-size:18px}
+.rxt td{font-size:20px;padding:11px 12px}.rxt code.rx{white-space:normal;word-break:break-word;display:inline-block;font-size:17px}
+.tid{display:inline-block;font:700 16px var(--mono);padding:6px 9px;border-radius:7px;background:var(--ink);color:#fff}
+.chr-r{display:flex;align-items:center;gap:22px}
+.howto{font:600 15px/1 var(--mono);letter-spacing:.06em;color:var(--blue-deep);border:1.5px solid rgba(6,147,227,.45);background:#fff;border-radius:999px;padding:8px 14px;cursor:help;text-transform:none}
+.howto::before{content:"?";display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font:700 12px/1 var(--mono);margin-right:8px;vertical-align:1px}
+[data-tip]{cursor:help}
+.ti{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:rgba(6,147,227,.15);color:var(--blue-deep);font:700 12px/1 var(--mono);font-style:normal;margin-left:6px;vertical-align:2px}
+.gradb .ti,.gradb .gl+.ti{background:rgba(255,255,255,.28);color:#fff}
+.gl{border-bottom:2px dotted rgba(6,147,227,.6)}
+.tbar .ti{margin-left:0}
+.gradb .gl,.tchip.seed .gl{border-bottom-color:rgba(255,255,255,.7)}
+.s-serp .sr{height:38px}
+.serpc .verdict{margin-top:10px;padding:11px 14px;font-size:18px}
+.serpc .so{margin-top:8px;padding:10px 14px;border-radius:12px;background:rgba(6,147,227,.1);font:600 17px/1.4 var(--body);color:var(--blue-deep)}
+.cant td{line-height:1.38}
+.cflip .card.gradb p{font-size:20px;line-height:1.4}
+.flip{padding:20px 24px}.flip ol{margin:0;padding-left:22px}.flip li{font:400 18px/1.4 var(--body);margin-bottom:5px}
+.mxsub{font:400 19px/1.4 var(--body);color:var(--muted);margin:-4px 0 6px;max-width:1500px}
+.mxc p{font-size:19px;line-height:1.45}.mxc .mxst{font:500 16px/1.35 var(--mono);color:var(--purple);margin:2px 0 8px}.mxc .mxfix{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(6,147,227,.08);color:var(--blue-deep)}
+.lv4{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;align-items:start}
+.lvc{background:#fff;border:1.5px solid var(--line);border-radius:20px;padding:20px 20px 12px;box-shadow:0 12px 34px rgba(3,8,21,.05)}
+.lvc h4{font:700 25px/1.15 var(--disp);margin-bottom:10px}
+.lvc ul{list-style:none;margin:0;padding:0}
+.lvc li{display:flex;flex-direction:column;gap:6px;padding:9px 0;border-top:1px solid var(--line);font:400 17px/1.4 var(--body)}
+.kd{align-self:flex-start;font:600 12.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:6px}
+.kd.rank{background:var(--grad);color:#fff}.kd.tech{background:rgba(6,147,227,.14);color:var(--blue-deep)}.kd.ux{background:var(--bg-3);color:var(--muted)}
+.lvno{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:10px 0 4px;font:400 17px/1.3 var(--body)}
+.lvno b{font:600 15px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--pink)}
+.lvno span{padding:7px 12px;border-radius:999px;background:rgba(239,0,75,.07);color:var(--ink)}
+.qa4{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.qa-c{background:#fff;border:1.5px solid var(--line);border-radius:20px;padding:20px 24px;box-shadow:0 12px 34px rgba(3,8,21,.05)}
+.qq{font:700 24px/1.25 var(--disp);margin-bottom:8px}
+.qa-c p{font:400 18px/1.42 var(--body);margin-top:6px}.qa-a{font-weight:600!important;color:var(--blue-deep)}
+.qa-e b,.qa-x b{font:600 14px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--purple);margin-right:4px}
+.tbl.prt.why td{font-size:16.5px;padding:10px 10px;line-height:1.35}.tbl.prt.why td.m{font-size:15.5px}
+.stg{display:block;font:500 12.5px/1.2 var(--mono);color:var(--faint);margin-top:6px}
+.s-ms .note.why{color:var(--ink);font-size:20px}
+.s-ms .tl-i p{font-size:20px}
+.s-plan .row.grow{align-items:flex-start;margin-top:4px}.tbl.plt th{padding-bottom:8px}
+.tbl.plt td{font-size:15.5px;padding:7px 9px;line-height:1.32;cursor:pointer}.tbl.plt td.m{font-size:14px;font-weight:600}
+.plt .ck{display:inline-block;width:18px;height:18px;border-radius:5px;border:2px solid var(--line-2);margin-right:9px;vertical-align:-3px}
+.plt tr.done .ck{background:var(--grad);border-color:transparent}.plt tr.done td{color:var(--muted)}
+.pcards{display:flex;gap:14px;margin:6px 0 0}.pcard{flex:1;font:400 15.5px/1.38 var(--body);padding:9px 14px;border-radius:12px;border:1.5px solid var(--line);background:#fff}.pcard.g{background:var(--grad-v);color:#fff;border:none}
+#qtip{position:fixed;z-index:9999;max-width:460px;padding:13px 16px;border-radius:12px;background:#0B1220;color:#F1F5F9;font:400 14.5px/1.55 "Be Vietnam Pro",system-ui,sans-serif;box-shadow:0 18px 44px rgba(0,0,0,.28);pointer-events:none;opacity:0;transition:opacity .12s;left:0;top:0}
+#qtip.on{opacity:1}#qtip b{color:#7DD3FC;font-weight:600}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<button id="edit" title="E">Sửa chữ</button>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+<section class="slide s-cover" data-title="Cover">
+  <div class="bg-grid"></div><div class="glow g1"></div><div class="glow g2"></div>
+  <header class="chrome"><span class="sec">GTV SEO · <b>Query Processing ứng dụng</b></span><span class="pgn"></span></header>
+  <div class="cover-l">
+    <div class="eyebrow reveal d1">Query Processing ứng dụng · 10/2026 · không gửi khách</div>
+    <h1 class="sm reveal d2">FHome Sài Gòn<br><span class="grad-text">đẩy keyword cam kết</span></h1>
+    <p class="cover-sub reveal d3">Áp phương pháp Query Processing lên bộ keyword cam kết của FHome Sài Gòn.</p>
+    <div class="cover-meta reveal d4"><span class="pill blue">FHome Sài Gòn</span><span class="pill">Lead Lê Minh Tuấn</span><span class="pill">SpySERP 16/10/2026</span></div>
+    <p class="kt-legend reveal d4"><span class="kt">Chữ đỏ</span> là chỗ cần kiểm tay (GSC, SERP hoặc trang thật) trước khi làm.</p>
+  </div>
+  <div class="cover-r">
+    <div class="qbox reveal d2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0693E3" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      <span class="typed tq" style="--n:33;--w:33.5ch">thi công nội thất căn hộ chung cư</span>
+    </div>
+    <div class="tokens"><span class="tk known">thi công<small>dịch vụ</small></span><span class="tk known">nội thất<small>lĩnh vực</small></span><span class="tk op">căn hộ chung cư<small>loại nhà</small></span></div>
+    <div class="arrow-down"></div>
+    <div class="rep-card">
+      <div class="mono">Google hiểu thành</div>
+      <div class="rep">thi công nội thất chung cư</div>
+      <div class="rep-sub">21 keyword thi công gom về trang thi công chung cư, 10 keyword đã vào Top 10</div>
+    </div>
+  </div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide " data-title="Ý tưởng" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">01 · <b>Cách nghĩ</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; vì sao đẩy keyword theo họ, không đẩy từng keyword.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; từ trái sang phải là số keyword cam kết, số template (họ keyword), rồi URL đang giữ nhiều keyword nhất. Hai thẻ dưới nói cơ chế và hệ quả: đẩy đúng một trang có thể kéo cả họ lên, và một lỗi trên trang đó cũng làm cả họ rơi.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Hợp đồng đếm keyword. Google xử lý <span class="grad-text">query đại diện</span>.</h2>
+    <div class="row grow">
+      <div class="flow3 reveal d2">
+        <div class="stat"><div class="v">226</div><div class="t">keyword cam kết của FHome Sài Gòn. Hợp đồng đếm từng keyword vào Top 3/5/10.</div></div>
+        <div class="farrow">→</div>
+        <div class="stat"><div class="v">16</div><div class="t">query template. Mỗi template là một họ biến thể có cùng cấu trúc.</div></div>
+        <div class="farrow">→</div>
+        <div class="stat hl"><div class="v">1 URL</div><div class="t">/gia-thiet-ke-thi-cong-noi-that-chung-cu/ đang giữ 30 keyword cam kết, 25 keyword trong Top 10.</div></div>
+      </div>
+    </div>
+    <div class="row reveal d3" style="gap:28px;margin-bottom:6px">
+      <div class="card f1"><span class="lbl">Cơ chế</span><p>Patent US8645407B2 mô tả việc gom các query gần nghĩa thành cụm và lấy tâm cụm làm gợi ý tìm kiếm. Giả thuyết: Google dùng tâm cụm làm query đại diện, trang khớp query đó nhận relevance cho cả họ.</p></div>
+      <div class="card f1"><span class="lbl">Hệ quả cho KPI</span><p>Đẩy đúng một query đại diện có thể kéo nhiều keyword cam kết cùng lúc. Một lỗi ở một trạm cũng có thể làm rơi cả họ keyword.</p></div>
+    </div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide " data-title="6 bước">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">01 · <b>Cách nghĩ</b></span><span class="chr-r"><span class="howto" data-tip="Quy trình chung cho mọi dự án. Mỗi bước có một đầu ra. Các slide sau của dự án đi theo đúng thứ tự 6 bước này.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Quy trình <span class="grad-text">6 bước</span> cho bộ keyword cam kết</h2>
+    <div class="row grow"><div class="steps6" style="width:100%"><div class="step reveal d1"><div class="hd"><span class="num">1</span><h4>Gom theo template</h4></div><p>Chia bộ keyword cam kết thành họ query cùng cấu trúc, ví dụ “đèn học [thuộc tính]”.</p><div class="out">Đầu ra: bảng template × biến, có hạng</div></div><div class="step reveal d2"><div class="hd"><span class="num">2</span><h4>Đọc lưới hạng</h4></div><p>Xem template nào đã mở trust (có biến thể Top 3), template nào chưa có tài liệu được retrieve.</p><div class="out">Đầu ra: nhóm đẩy tiếp · sửa trước · chưa làm</div></div><div class="step reveal d3"><div class="hd"><span class="num">3</span><h4>Kiểm SERP</h4></div><p>Đọc loại trang top 10 và AI Overview. Kiểm SERP overlap. Chốt 1 URL cho mỗi query đại diện.</p><div class="out">Đầu ra: bảng query đại diện → URL</div></div><div class="step reveal d4"><div class="hd"><span class="num">4</span><h4>Dò pipeline</h4></div><p>Tìm trạm đang hỏng ở từng cụm: segment, augment, canonical, context, câu hỏi, retrieve, passage.</p><div class="out">Đầu ra: ma trận cụm × trạm</div></div><div class="step reveal d5"><div class="hd"><span class="num">5</span><h4>Sửa đúng trạm</h4></div><p>Sửa trên trang đang rank: augmentation map, K2Q, segment, gom URL. Trước kỳ đo chỉ thêm, không rút.</p><div class="out">Đầu ra: topic gắn keyword cam kết</div></div><div class="step reveal d6"><div class="hd"><span class="num">6</span><h4>Đo theo template</h4></div><p>Regex GSC và nhóm SpySERP theo template. Đọc median các lần chạy đầy đủ, chờ 14 ngày.</p><div class="out">Đầu ra: mở rộng · dừng · hoàn lại</div></div></div></div><p class="src">Site mới bắt đầu từ entity; dự án đang chạy bắt đầu từ bộ keyword cam kết đã có hạng. Bước 3 kiểm SERP overlap trước khi gộp hay tách URL. Bước 4 theo chuỗi 8 trạm xử lý query (B1–B8).</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-beat" data-title="FHome Sài Gòn">
+  <div class="beat-rings"></div>
+  <header class="chrome"><span class="sec">Dự án</span><span class="pgn"></span></header>
+  <div class="beat">
+    <div class="eyebrow reveal d1">Dự án · Lead Lê Minh Tuấn · fhomesg.vn</div>
+    <h2 class="reveal d2">FHome Sài Gòn</h2>
+    <div class="beat-stats reveal d3"><div><b>226</b><span>keyword cam kết</span></div><div><b>59/76/109</b><span>Top 3/5/10 (median 3 lần)</span></div></div>
+  </div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide " data-title="Template" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Gom template</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; bộ keyword cam kết chia thành những họ nào, và họ nào đã có hạng tốt.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; mỗi dòng là một template. Độ dài thanh là số keyword. Màu là nhóm hạng hiện tại: xanh đậm Top 3, xanh Top 4–10, tím 11–20, xám 21 tới độ sâu đo, hồng là ngoài độ sâu đo. Cột giữa là số keyword Top 10 ở mốc so sánh (ngày ghi ở dòng nguồn) và hiện tại; deck không có mốc so sánh thì chỉ ghi số hiện tại. Rê chuột lên nhãn trạng thái để xem nghĩa, lên dòng để xem giải thích đầy đủ.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">16 template: <span class="grad-text">thi công chung cư</span> đáng đẩy nhất</h2>
+    <div class="legend reveal d2"><span><i class="t3"></i>Top 3</span><span><i class="t10"></i>4–10</span><span><i class="t20"></i>11–20</span><span><i class="t50"></i>21–100</span><span><i class="out"></i>ngoài 100</span><span class="lg-r">Top 10: 18/09 → nay</span></div>
+    <div class="tbars dense reveal d3"><div class="tb" data-tip="Sau go-live 15/10, cả họ thi công gom về trang thi công (GSC 15–16/10). 6 keyword &quot;thiết kế thi công…&quot; còn ở bài quy trình và trang giá."><div class="tl">thi công nội thất chung cư [biến]</div><div class="tbar"><div class="sb" style="width:72.4%"><i class="t3" style="width:4.76%"></i><i class="t10" style="width:42.86%"></i><i class="t20" style="width:23.81%"></i><i class="t50" style="width:28.57%"></i></div><span class="tn">21</span><i class="ti">i</i></div>
+      <div class="tt"><span class="ta">0</span>→<b>10</b></div><div class="ts"><span class="st up" data-tip="&lt;b&gt;Đang lan:&lt;/b&gt; số keyword Top 10 của họ tăng rõ so với mốc so sánh (khoảng 4 tuần trước). Giữ nguyên trang, chỉ chỉnh nhỏ.">Đang lan</span><small>Top 10: 0 → 10; hạng 11–20: 5</small></div></div><div class="tb" data-tip="Trang vừa go-live 15/10. Head dao động #13–#28 giữa các lần chạy: chưa đọc kết quả trước 29/10."><div class="tl">thiết kế nội thất nhà phố [đẹp · mẫu]</div><div class="tbar"><div class="sb" style="width:51.7%"><i class="t20" style="width:13.33%"></i><i class="t50" style="width:66.67%"></i><i class="out" style="width:20.00%"></i></div><span class="tn">15</span><i class="ti">i</i></div>
+      <div class="tt"><span class="ta">0</span>→<b>0</b></div><div class="ts"><span class="st mid" data-tip="&lt;b&gt;Kẹt:&lt;/b&gt; có keyword trong Top 50 nhưng chưa vào Top 10. Xem slide Pipeline để biết trạm hỏng.">Kẹt</span><small>Top 10: 0 → 0; hạng 11–20: 2</small></div></div><div class="tb"><div class="tl">nhà phố [kích thước · số tầng · nhỏ]</div><div class="tbar"><div class="sb" style="width:51.7%"><i class="t3" style="width:33.33%"></i><i class="t10" style="width:20.00%"></i><i class="t20" style="width:20.00%"></i><i class="t50" style="width:26.67%"></i></div><span class="tn">15</span></div>
+      <div class="tt"><span class="ta">5</span>→<b>8</b></div><div class="ts"><span class="st up" data-tip="&lt;b&gt;Đang lan:&lt;/b&gt; số keyword Top 10 của họ tăng rõ so với mốc so sánh (khoảng 4 tuần trước). Giữ nguyên trang, chỉ chỉnh nhỏ.">Đang lan</span><small>Top 10: 5 → 8; hạng 11–20: 3</small></div></div><div class="tb"><div class="tl">nội thất phong cách [tên]</div><div class="tbar"><div class="sb" style="width:58.6%"><i class="t3" style="width:17.65%"></i><i class="t10" style="width:5.88%"></i><i class="t20" style="width:23.53%"></i><i class="t50" style="width:23.53%"></i><i class="out" style="width:29.41%"></i></div><span class="tn">17</span></div>
+      <div class="tt"><span class="ta">2</span>→<b>4</b></div><div class="ts"><span class="st ok" data-tip="&lt;b&gt;Đã mở:&lt;/b&gt; template đã có keyword Top 3. Google đã chấp nhận site cho họ này. Việc tiếp theo là phủ các biến thể chưa có hạng tốt trên cùng URL.">Đã mở</span><small>Top 10: 2 → 4; hạng 11–20: 4</small></div></div><div class="tb"><div class="tl">thiết kế nội thất chung cư [m² · nhỏ]</div><div class="tbar"><div class="sb" style="width:100.0%"><i class="t3" style="width:68.97%"></i><i class="t10" style="width:10.34%"></i><i class="t20" style="width:10.34%"></i><i class="t50" style="width:10.34%"></i></div><span class="tn">29</span></div>
+      <div class="tt"><span class="ta">20</span>→<b>23</b></div><div class="ts"><span class="st ok" data-tip="&lt;b&gt;Đã mở:&lt;/b&gt; template đã có keyword Top 3. Google đã chấp nhận site cho họ này. Việc tiếp theo là phủ các biến thể chưa có hạng tốt trên cùng URL.">Đã mở</span><small>Top 10: 20 → 23; hạng 11–20: 3</small></div></div><div class="tb" data-tip="Top 3 giảm 15 → 11 trong 4 tuần, Top 10 giữ 22. Theo dõi, không rút nội dung trang giá."><div class="tl">[giá · chi phí] nội thất chung cư</div><div class="tbar"><div class="sb" style="width:93.1%"><i class="t3" style="width:40.74%"></i><i class="t10" style="width:40.74%"></i><i class="t20" style="width:11.11%"></i><i class="out" style="width:7.41%"></i></div><span class="tn">27</span><i class="ti">i</i></div>
+      <div class="tt"><span class="ta">22</span>→<b>22</b></div><div class="ts"><span class="st ok" data-tip="&lt;b&gt;Đã mở:&lt;/b&gt; template đã có keyword Top 3. Google đã chấp nhận site cho họ này. Việc tiếp theo là phủ các biến thể chưa có hạng tốt trên cùng URL.">Đã mở</span><small>Top 10: 22 → 22; hạng 11–20: 3</small></div></div><div class="tb"><div class="tl">nội thất phong cách nhật bản [biến]</div><div class="tbar"><div class="sb" style="width:44.8%"><i class="t3" style="width:46.15%"></i><i class="t10" style="width:15.38%"></i><i class="t20" style="width:30.77%"></i><i class="t50" style="width:7.69%"></i></div><span class="tn">13</span></div>
+      <div class="tt"><span class="ta">8</span>→<b>8</b></div><div class="ts"><span class="st ok" data-tip="&lt;b&gt;Đã mở:&lt;/b&gt; template đã có keyword Top 3. Google đã chấp nhận site cho họ này. Việc tiếp theo là phủ các biến thể chưa có hạng tốt trên cùng URL.">Đã mở</span><small>Top 10: 8 → 8; hạng 11–20: 4</small></div></div><div class="tb"><div class="tl">nội thất [phòng khách · bếp] chung cư</div><div class="tbar"><div class="sb" style="width:24.1%"><i class="t10" style="width:28.57%"></i><i class="t20" style="width:57.14%"></i><i class="t50" style="width:14.29%"></i></div><span class="tn">7</span></div>
+      <div class="tt"><span class="ta">0</span>→<b>2</b></div><div class="ts"><span class="st up" data-tip="&lt;b&gt;Đang lan:&lt;/b&gt; số keyword Top 10 của họ tăng rõ so với mốc so sánh (khoảng 4 tuần trước). Giữ nguyên trang, chỉ chỉnh nhỏ.">Đang lan</span><small>Top 10: 0 → 2; hạng 11–20: 4</small></div></div><div class="tb"><div class="tl">nội thất chung cư [số phòng ngủ]</div><div class="tbar"><div class="sb" style="width:27.6%"><i class="t3" style="width:25.00%"></i><i class="t10" style="width:37.50%"></i><i class="t20" style="width:25.00%"></i><i class="t50" style="width:12.50%"></i></div><span class="tn">8</span></div>
+      <div class="tt"><span class="ta">3</span>→<b>5</b></div><div class="ts"><span class="st up" data-tip="&lt;b&gt;Đang lan:&lt;/b&gt; số keyword Top 10 của họ tăng rõ so với mốc so sánh (khoảng 4 tuần trước). Giữ nguyên trang, chỉ chỉnh nhỏ.">Đang lan</span><small>Top 10: 3 → 5; hạng 11–20: 2</small></div></div><div class="tb"><div class="tl">[giá · phí] nội thất nhà phố</div><div class="tbar"><div class="sb" style="width:17.2%"><i class="t10" style="width:60.00%"></i><i class="t20" style="width:40.00%"></i></div><span class="tn">5</span></div>
+      <div class="tt"><span class="ta">0</span>→<b>3</b></div><div class="ts"><span class="st up" data-tip="&lt;b&gt;Đang lan:&lt;/b&gt; số keyword Top 10 của họ tăng rõ so với mốc so sánh (khoảng 4 tuần trước). Giữ nguyên trang, chỉ chỉnh nhỏ.">Đang lan</span><small>Top 10: 0 → 3; hạng 11–20: 2</small></div></div><div class="tb"><div class="tl">[công ty · dịch vụ · tư vấn] chung cư</div><div class="tbar"><div class="sb" style="width:34.5%"><i class="t3" style="width:10.00%"></i><i class="t10" style="width:70.00%"></i><i class="out" style="width:20.00%"></i></div><span class="tn">10</span></div>
+      <div class="tt"><span class="ta">0</span>→<b>8</b></div><div class="ts"><span class="st up" data-tip="&lt;b&gt;Đang lan:&lt;/b&gt; số keyword Top 10 của họ tăng rõ so với mốc so sánh (khoảng 4 tuần trước). Giữ nguyên trang, chỉ chỉnh nhỏ.">Đang lan</span><small>Top 10: 0 → 8; hạng 11–20: 0</small></div></div><div class="tb"><div class="tl">[dịch vụ] nội thất · quận 9</div><div class="tbar"><div class="sb" style="width:31.0%"><i class="t3" style="width:66.67%"></i><i class="t10" style="width:33.33%"></i></div><span class="tn">9</span></div>
+      <div class="tt"><span class="ta">5</span>→<b>9</b></div><div class="ts"><span class="st up" data-tip="&lt;b&gt;Đang lan:&lt;/b&gt; số keyword Top 10 của họ tăng rõ so với mốc so sánh (khoảng 4 tuần trước). Giữ nguyên trang, chỉ chỉnh nhỏ.">Đang lan</span><small>Top 10: 5 → 9; hạng 11–20: 0</small></div></div><div class="tb"><div class="tl">[kinh nghiệm · lưu ý · quy trình]</div><div class="tbar"><div class="sb" style="width:20.7%"><i class="t3" style="width:66.67%"></i><i class="t10" style="width:33.33%"></i></div><span class="tn">6</span></div>
+      <div class="tt"><span class="ta">4</span>→<b>6</b></div><div class="ts"><span class="st up" data-tip="&lt;b&gt;Đang lan:&lt;/b&gt; số keyword Top 10 của họ tăng rõ so với mốc so sánh (khoảng 4 tuần trước). Giữ nguyên trang, chỉ chỉnh nhỏ.">Đang lan</span><small>Top 10: 4 → 6; hạng 11–20: 0</small></div></div><div class="tb" data-tip="1 keyword Top 10 là &quot;tại tp hcm&quot; trên bài /cong-ty/. Head và 20 biến thể khác ngoài 100."><div class="tl">[mẫu] thiết kế nội thất chung cư [đẹp]</div><div class="tbar"><div class="sb" style="width:86.2%"><i class="t10" style="width:4.00%"></i><i class="t50" style="width:12.00%"></i><i class="out" style="width:84.00%"></i></div><span class="tn">25</span><i class="ti">i</i></div>
+      <div class="tt"><span class="ta">0</span>→<b>1</b></div><div class="ts"><span class="st mid" data-tip="&lt;b&gt;Kẹt:&lt;/b&gt; có keyword trong Top 50 nhưng chưa vào Top 10. Xem slide Pipeline để biết trạm hỏng.">Kẹt</span><small>Top 10: 0 → 1; hạng 11–20: 0</small></div></div><div class="tb"><div class="tl">[các · xu hướng] phong cách nội thất</div><div class="tbar"><div class="sb" style="width:48.3%"><i class="out" style="width:100.00%"></i></div><span class="tn">14</span></div>
+      <div class="tt"><span class="ta">0</span>→<b>0</b></div><div class="ts"><span class="st no" data-tip="&lt;b&gt;Chưa có hạng:&lt;/b&gt; phần lớn keyword ngoài độ sâu đo. Thường do Google chưa lấy trang (Retrieve) hoặc site chưa có trang đúng loại.">Chưa có hạng</span><small>Top 10: 0 → 0; hạng 11–20: 0</small></div></div><div class="tb"><div class="tl">thi công nội thất nhà phố [biến]</div><div class="tbar"><div class="sb" style="width:17.2%"><i class="out" style="width:100.00%"></i></div><span class="tn">5</span></div>
+      <div class="tt"><span class="ta">0</span>→<b>0</b></div><div class="ts"><span class="st no" data-tip="&lt;b&gt;Chưa có hạng:&lt;/b&gt; phần lớn keyword ngoài độ sâu đo. Thường do Google chưa lấy trang (Retrieve) hoặc site chưa có trang đúng loại.">Chưa có hạng</span><small>Top 10: 0 → 0; hạng 11–20: 0</small></div></div></div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026 · gom bằng rules.json</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-tg" data-title="Lưới template" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Lưới hạng</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; trong một template, biến thể nào đã thắng, biến thể nào còn kẹt.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; chọn tab template. Mỗi ô là một keyword: số ở góc là hạng hiện tại, dòng nhỏ là hạng ở mốc so sánh. Ô viền hồng: site có trang nhưng keyword chưa vào độ sâu đo. Thẻ trắng bên phải là nhận định, thẻ màu là việc cần làm. Nút “Mô phỏng lan trust” chỉ minh họa cách Koray mô tả, không phải dữ liệu.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Lưới hạng: biến thể nào <span class="grad-text">đã thắng</span></h2>
+    <div class="btnrow tabs tgTabs reveal d2"><button class="btn on" data-t="cc_m2_nho">thiết kế nội thất chung cư [m² · nhỏ]</button><button class="btn" data-t="tc_cc">thi công nội thất chung cư [biến]</button><button class="btn" data-t="gia_cc">nội thất chung cư [giá · chi phí]</button><button class="btn" data-t="tk_nhapho">thiết kế nội thất nhà phố [đẹp · mẫu]</button><button class="btn" data-t="head_cc">thiết kế nội thất chung cư [mẫu · đẹp]</button></div>
+    <div class="row grow" style="gap:44px">
+      <div class="col f14 reveal d2">
+        <div class="tpl-line tgLine"></div>
+        <div class="tchips tgChips"></div>
+        <div class="row" style="gap:16px;align-items:center;margin-top:4px"><button class="btn primary tgRun" data-tip="Minh họa cách Koray mô tả: Google thử site ở biến thể đang có hạng tốt nhất, rồi thử các biến thể cùng cấu trúc. Đây là hình minh họa, không phải dữ liệu đo.">▶ Mô phỏng lan trust</button><button class="btn tgReset">Làm lại</button><span class="tpl-msg tgMsg"></span></div>
+      </div>
+      <div class="col f1 reveal d3">
+        <div class="card"><span class="lbl">Đọc lưới</span><p class="tgRead"></p></div>
+        <div class="card gradb"><span class="lbl tgTopic"></span><p class="tgAct"></p></div>
+      </div>
+    </div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide " data-title="Canonical" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Canonical</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; mỗi họ query nên do URL nào nhận.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; cột “Google đang chọn” là URL và hạng thật trong công cụ đo hạng. Cột “Vấn đề” nói vì sao chưa ổn. Cột “Quyết định” là URL giữ vai đại diện và việc kèm theo. Rê chuột lên dòng để xem lý do đầy đủ. Luật bên phải áp cho mọi dòng.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Một query đại diện = <span class="grad-text">một URL</span></h2>
+    <div class="row grow" style="gap:32px">
+      <table class="tbl cant f1 reveal d2"><thead><tr><th style="width:17%">Query</th><th style="width:25%">Google đang chọn</th><th style="width:23%">Vấn đề</th><th>Quyết định</th><th style="width:8%">Topic</th></tr></thead><tbody><tr data-tip="Sheet đã đổi target 16/10 (Lead duyệt)."><td class="m">thi công nội thất chung cư [trọn gói · thiết kế và thi công]</td><td>Trang thi công #20 cho head; trang giá giữ "trọn gói" #8; bài quy trình giữ "thiết kế thi công" #26–62</td><td>Một họ query chia 3 URL. GSC: "thiết kế nội thất chung cư trọn gói" chia trang giá (#23) và trang thi công (#32).</td><td>Trang thi công là URL đại diện. Trang giá và bài quy trình giữ nguyên, thêm link về trang thi công. Chưa rút nội dung.<i class="ti">i</i></td><td><span class="pri mid">T1</span></td></tr><tr><td class="m">dịch vụ · tư vấn · tphcm thiết kế nội thất chung cư</td><td>/cong-ty-thiet-ke-noi-that/ #3–9; trang thi công nhận "dịch vụ…", "tư vấn … nhà chung cư" #7–9</td><td>Họ tìm đơn vị chia 2 URL. GSC: /cong-ty/ vị trí 6–12, trang thi công 43–54.</td><td>Bài /cong-ty/ là URL đại diện cho họ tìm đơn vị, gồm 3 cách gõ tphcm. Không thêm anchor "dịch vụ thiết kế" về hub.</td><td><span class="pri mid">T7</span></td></tr><tr><td class="m">nội thất chung cư phong cách nhật bản</td><td>Trang phòng khách Nhật #6; trang chung cư Nhật ở 70–82 (GSC)</td><td>Trang đúng intent có thật nhưng Google chọn trang phòng khách.</td><td>Target trang chung cư Nhật. Giữ trang phòng khách tới khi trang chung cư Nhật vào Top 10.</td><td><span class="pri hi">T5</span></td></tr><tr><td class="m">phong cách nội thất nhật bản</td><td>Trang phòng khách Nhật #11–14 cho 4 keyword "phong cách…"</td><td>Intent tìm hiểu phong cách, trang phòng khách trả lời lệch. Trang phong cách Nhật không có hạng cho nhóm này.</td><td>Trang phong cách Nhật nhận nhóm "phong cách…": thêm đoạn định nghĩa dưới H1, link từ trang phòng khách Nhật.</td><td><span class="pri mid">T5</span></td></tr><tr><td class="m">lưu ý khi thiết kế nội thất chung cư</td><td>Bài lưu ý thi công #7; bài lưu ý thiết kế ở #20 (GSC)</td><td>Hai bài lưu ý tranh một query, hai bài chưa link nhau.</td><td>Bài lưu ý thiết kế là URL đại diện. Thêm link qua lại giữa hai bài.</td><td><span class="pri hi">đề xuất mới</span></td></tr></tbody></table>
+      <div class="col reveal d3 cflip" style="width:430px;flex:none">
+        <div class="card gradb"><span class="lbl">Luật</span><p>Giữ URL Google đang chọn khi URL đó đã vào Top 10 và đúng intent.</p><p>Một họ query, một URL đại diện, một anchor.</p><p>Trang đúng intent có thật thì đặt làm target; chưa rút trang đang giữ hạng.</p></div><div class="card flip"><span class="lbl">Khi Google lật URL</span><ol><li>Ghi hai URL và ngày lật.</li><li>Kiểm canonical, internal link và anchor trỏ về mỗi URL.</li><li>Chọn URL đại diện theo loại trang của SERP.</li><li>Dồn anchor về URL đó, chờ 14 ngày rồi đọc median.</li></ol></div>
+      </div>
+    </div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026 · URL Google chọn: export SpySERP 14/10 · GSC 17/09–14/10</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-serp" data-title="SERP" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · SERP</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; với query đại diện của từng intent, Google đang muốn loại trang nào, và site có dùng đúng loại trang không.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; mỗi thẻ là top kết quả của một query. Nhãn màu là loại trang. Dòng xanh là site. Cuối thẻ là intent, kết luận về loại trang và việc rút ra.&lt;br&gt;&lt;b&gt;Vì sao cần:&lt;/b&gt; nếu Top 10 gần như toàn trang danh mục mà site đẩy trang sản phẩm, sửa chữ trên trang sản phẩm khó thắng. Loại trang quyết định URL nào được đẩy ở slide Canonical.&lt;br&gt;&lt;br&gt;&lt;b&gt;Ở FHome Sài Gòn:&lt;/b&gt; Mỗi thẻ là một query đại diện của một intent. Dòng tô màu là FHome. &quot;Vì vậy&quot; là việc rút ra cho URL của FHome.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Loại trang Google chọn quyết định <span class="grad-text">URL nào được đẩy</span></h2>
+    <div class="row grow"><div class="serp3" style="width:100%"><div class="serpc reveal d2"><div class="q">thiết kế nội thất chung cư</div><div class="d">Google desktop · VN · ảnh 14/10/2026</div><div class="sr"><span class="p">1</span><span class="ty list" data-tip="Bài top list hoặc bài tổng hợp.">Tổng hợp mẫu</span><span class="dm">bluewood.com.vn</span><span class="dr"></span></div><div class="sr"><span class="p">2</span><span class="ty cat" data-tip="Trang danh mục: liệt kê nhiều sản phẩm hoặc dịch vụ.">Dịch vụ</span><span class="dm">daiphathouse.com</span><span class="dr"></span></div><div class="sr"><span class="p">3</span><span class="ty list" data-tip="Bài top list hoặc bài tổng hợp.">Tổng hợp mẫu</span><span class="dm">noithattugia.com</span><span class="dr"></span></div><div class="sr"><span class="p">4</span><span class="ty list" data-tip="Bài top list hoặc bài tổng hợp.">Tổng hợp mẫu</span><span class="dm">thietkenoithatatz.com</span><span class="dr"></span></div><div class="sr"><span class="p">5</span><span class="ty list" data-tip="Bài top list hoặc bài tổng hợp.">Tổng hợp mẫu</span><span class="dm">xhomesg.com.vn</span><span class="dr"></span></div><div class="sr"><span class="p">6</span><span class="ty list" data-tip="Bài top list hoặc bài tổng hợp.">Tổng hợp mẫu</span><span class="dm">hometalk.com.vn</span><span class="dr"></span></div><div class="sr"><span class="p">7</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">noithatqi.vn</span><span class="dr"></span></div><div class="sr"><span class="p">8</span><span class="ty list" data-tip="Bài top list hoặc bài tổng hợp.">Tổng hợp mẫu</span><span class="dm">doctornoithat.com</span><span class="dr"></span></div><div class="sr me" data-tip="Dòng của site trong cùng lần đo."><span class="p">—</span><span class="ty list" data-tip="Bài top list hoặc bài tổng hợp.">Ngoài 100</span><span class="dm">fhomesg.vn</span><span class="dr"></span></div><div class="verdict">Intent xem mẫu. 6/8 kết quả là trang "N mẫu" của đơn vị nội thất.</div><div class="so">Vì vậy: giữ dạng "126+ mẫu" của hub. Hub đúng loại trang mà chưa có hạng, nên xét trạm Retrieve (T8).</div></div><div class="serpc reveal d3"><div class="q">thi công nội thất chung cư</div><div class="d">Google desktop · VN · ảnh 14/10/2026</div><div class="sr"><span class="p">1</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">noithattugia.com</span><span class="dr"></span></div><div class="sr"><span class="p">2</span><span class="ty cat" data-tip="Trang danh mục: liệt kê nhiều sản phẩm hoặc dịch vụ.">Dịch vụ</span><span class="dm">noithatmanhhe.vn</span><span class="dr"></span></div><div class="sr"><span class="p">3</span><span class="ty guide" data-tip="Bài hướng dẫn.">Quy trình</span><span class="dm">topdesign.com.vn</span><span class="dr"></span></div><div class="sr"><span class="p">4</span><span class="ty cat" data-tip="Trang danh mục: liệt kê nhiều sản phẩm hoặc dịch vụ.">Dịch vụ</span><span class="dm">decoviet.vn</span><span class="dr"></span></div><div class="sr"><span class="p">—</span><span class="ty aio" data-tip="AI Overview.">AI Overview</span><span class="dm">google.com</span><span class="dr"></span></div><div class="sr"><span class="p">5</span><span class="ty list" data-tip="Bài top list hoặc bài tổng hợp.">Tổng hợp mẫu</span><span class="dm">bluewood.com.vn</span><span class="dr"></span></div><div class="sr"><span class="p">6</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">khanhvyhome.com</span><span class="dr"></span></div><div class="sr"><span class="p">7</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">noithatvietdecor.vn</span><span class="dr"></span></div><div class="sr"><span class="p">8</span><span class="ty cat" data-tip="Trang danh mục: liệt kê nhiều sản phẩm hoặc dịch vụ.">Dịch vụ</span><span class="dm">f24.vn</span><span class="dr"></span></div><div class="sr me" data-tip="Dòng của site trong cùng lần đo."><span class="p">20</span><span class="ty cat" data-tip="Trang danh mục: liệt kê nhiều sản phẩm hoặc dịch vụ.">Dịch vụ</span><span class="dm">fhomesg.vn</span><span class="dr"></span></div><div class="verdict">Intent hỗn hợp: dịch vụ trọn gói, báo giá, quy trình. AI Overview định nghĩa "trọn gói" và trích giá theo số phòng ngủ.</div><div class="so">Vì vậy: trang thi công cần đủ khối gói trọn gói, giá tóm tắt và quy trình tóm tắt có link (T1).</div></div><div class="serpc reveal d4"><div class="q">báo giá thiết kế nội thất chung cư</div><div class="d">Google desktop · VN · ảnh 14/10/2026</div><div class="sr"><span class="p">1</span><span class="ty guide" data-tip="Bài hướng dẫn.">Bài báo giá</span><span class="dm">noithatqi.vn</span><span class="dr"></span></div><div class="sr"><span class="p">2</span><span class="ty cat" data-tip="Trang danh mục: liệt kê nhiều sản phẩm hoặc dịch vụ.">Dịch vụ</span><span class="dm">noithatmanhhe.vn</span><span class="dr"></span></div><div class="sr"><span class="p">3</span><span class="ty guide" data-tip="Bài hướng dẫn.">Bảng giá</span><span class="dm">hometalk.com.vn</span><span class="dr"></span></div><div class="sr"><span class="p">—</span><span class="ty aio" data-tip="AI Overview.">AI Overview</span><span class="dm">google.com</span><span class="dr"></span></div><div class="sr"><span class="p">4</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">noithattugia.com</span><span class="dr"></span></div><div class="sr"><span class="p">5</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">noithatbenthanh.vn</span><span class="dr"></span></div><div class="sr me" data-tip="Dòng của site trong cùng lần đo."><span class="p">6</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">fhomesg.vn</span><span class="dr"></span></div><div class="sr"><span class="p">7</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">thietkenoithatatz.com</span><span class="dr"></span></div><div class="sr"><span class="p">8</span><span class="ty guide" data-tip="Bài hướng dẫn.">Báo giá</span><span class="dm">noithatvietdecor.vn</span><span class="dr"></span></div><div class="verdict">Intent giá. 7/8 kết quả là trang báo giá có bảng theo m², gói hoặc phòng ngủ.</div><div class="so">Vì vậy: trang giá giữ họ query giá. Trang khác chỉ tóm tắt giá và link về trang giá (T4).</div></div></div></div><p class="src">Ảnh chụp Google desktop 14/10/2026 (02-raw/screenshots/serp-ai/). Vị trí đo không ghi trên ảnh. Hạng FHome: SpySERP median 14–16/10.</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-mx" data-title="Pipeline" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Pipeline</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; mỗi cụm keyword đang hỏng ở trạm nào trong chuỗi Google xử lý query, để sửa đúng chỗ.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; mỗi dòng là một cụm. Chấm đặc là trạm hỏng chính, vòng rỗng là trạm phụ. Rê chuột lên tên trạm để xem trạm đó làm gì; rê lên chấm để xem vì sao cụm hỏng ở đó. Bấm vào dòng để xem số liệu, chẩn đoán và việc làm.&lt;br&gt;&lt;b&gt;Vì sao cần:&lt;/b&gt; cùng là “chưa lên Top”, nhưng lỗi Retrieve phải sửa kỹ thuật, lỗi Canonical phải chọn lại URL, chỉ lỗi Augment mới cần thêm nội dung. Trạm B1 (tách token) không có đòn bẩy SEO nên không có cột.&lt;br&gt;&lt;br&gt;&lt;b&gt;Ở FHome Sài Gòn:&lt;/b&gt; Chấm đặc là trạm hỏng chính, vòng rỗng là trạm phụ. Rê chuột lên chấm để xem lý do; bấm dòng để xem việc sửa.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Mỗi cụm hỏng ở <span class="grad-text">một trạm khác nhau</span></h2>
+    <p class="mxsub reveal d1">Mỗi dòng là một cụm keyword. Chấm đặc là trạm hỏng chính, vòng rỗng là trạm phụ. Rê chuột lên tên trạm hoặc lên chấm để xem giải thích; bấm vào dòng để xem chẩn đoán và việc làm.</p>
+    <div class="row grow" style="gap:40px">
+      <table class="mx mxT reveal d2"><thead><tr><th class="nm">Cụm keyword cam kết</th><th data-tip="&lt;b&gt;B2 Segment:&lt;/b&gt; Google cắt query thành các mảnh có nghĩa theo log tìm kiếm (US9690847B2). Cụm hỏng ở đây khi title, heading không dùng đúng mảnh người dùng gõ, ví dụ thiếu tên sản phẩm hoặc thêm chữ chen giữa. Đòn bẩy: đặt đúng mảnh vào title, H1, heading."><b>B2</b><small>Segment</small></th><th data-tip="&lt;b&gt;B3 Augment:&lt;/b&gt; Google giữ mảnh chính và thay mảnh phụ bằng biến thể gần nghĩa để mở rộng query (US8577913B1). Cụm hỏng ở đây khi trang chỉ phủ vài biến thể. Đòn bẩy: phủ các biến thể anh em trên cùng URL bằng bảng, H3, card."><b>B3</b><small>Augment</small></th><th data-tip="&lt;b&gt;B4 Canonical:&lt;/b&gt; Google gom các cách gõ thành cụm, tâm cụm là query đại diện, rồi chọn một URL cho cụm (US8645407B2). Cụm hỏng ở đây khi một họ query chia cho nhiều URL, hoặc Google chọn URL khác URL site muốn. Đòn bẩy: chốt một URL, một anchor."><b>B4</b><small>Canonical</small></th><th data-tip="&lt;b&gt;B5 Context:&lt;/b&gt; Google gắn ngữ cảnh địa điểm, thời gian, người dùng vào query (US10146829B2). Cụm hỏng ở đây khi query địa phương mà trang thiếu tín hiệu địa điểm."><b>B5</b><small>Context</small></th><th data-tip="&lt;b&gt;B6 Câu hỏi:&lt;/b&gt; Google đổi keyword thành câu hỏi ngầm, gọi là K2Q (US9898554B2). Cụm hỏng ở đây khi heading không phải câu người dùng hỏi, hoặc câu trả lời nằm xa heading."><b>B6</b><small>Câu hỏi</small></th><th data-tip="&lt;b&gt;B7 Retrieve:&lt;/b&gt; Google lấy trang vào danh sách ứng viên rồi lọc dần trước khi chấm hạng. Cụm hỏng ở đây khi trang noindex, canonical sai, chưa được crawl lại hoặc quá giống trang khác: keyword không có hạng dù trang tồn tại. Sửa trạm này trước mọi việc nội dung."><b>B7</b><small>Retrieve</small></th><th data-tip="&lt;b&gt;B8 Passage:&lt;/b&gt; Google chọn đoạn trả lời dựa trên heading và đoạn ngay dưới heading (US9959315B1). Cụm hỏng ở đây khi đoạn trả lời dài, lan man hoặc nằm cuối bài."><b>B8</b><small>Passage</small></th><th>Topic</th></tr></thead><tbody><tr data-i="0" class=sel><td class="nm">Thi công chung cư</td><td><span class="dot v0"></span></td><td><span class="dot v1" data-tip="&lt;b&gt;B3 Augment · trạm phụ:&lt;/b&gt; Chưa có H2 riêng cho &quot;thiết kế và thi công&quot; và gói tiết kiệm."></span></td><td><span class="dot v2" data-tip="&lt;b&gt;B4 Canonical · trạm chính:&lt;/b&gt; 11/21 keyword Google trả URL khác target (export 14/10)."></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td class="tp">T1</td></tr><tr data-i="1"><td class="nm">Trang con chung cư</td><td><span class="dot v1" data-tip="&lt;b&gt;B2 Segment · trạm phụ:&lt;/b&gt; Title, H1 trang con dùng &quot;chung cư&quot;, không có mảnh &quot;căn hộ&quot;."></span></td><td><span class="dot v2" data-tip="&lt;b&gt;B3 Augment · trạm chính:&lt;/b&gt; Trang 50m², 60m² ít mẫu ảnh thật hơn trang 70m², 80m² đang #1."></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td class="tp">T2</td></tr><tr data-i="2"><td class="nm">Nhà phố: hub và trang con</td><td><span class="dot v0"></span></td><td><span class="dot v2" data-tip="&lt;b&gt;B3 Augment · trạm chính:&lt;/b&gt; Biến thể &quot;mẫu&quot;, &quot;đẹp&quot;, &quot;hiện đại&quot; chưa có khối riêng trên hub."></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v1" data-tip="&lt;b&gt;B8 Passage · trạm phụ:&lt;/b&gt; Trang con tầng và kích thước có ít đoạn trả lời ngay dưới H2."></span></td><td class="tp">T3</td></tr><tr data-i="3"><td class="nm">Giá chung cư và nhà phố</td><td><span class="dot v2" data-tip="&lt;b&gt;B2 Segment · trạm chính:&lt;/b&gt; H2 bảng giá dùng &quot;chung cư&quot;, thiếu mảnh &quot;căn hộ&quot;."></span></td><td><span class="dot v0"></span></td><td><span class="dot v1" data-tip="&lt;b&gt;B4 Canonical · trạm phụ:&lt;/b&gt; Trước 16/10, hub thi công đặt anchor &quot;báo giá…&quot; trỏ trang thi công."></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td class="tp">T4</td></tr><tr data-i="4"><td class="nm">Nhật Bản: 3 URL</td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v2" data-tip="&lt;b&gt;B4 Canonical · trạm chính:&lt;/b&gt; Trang chung cư Nhật và trang phong cách Nhật có thật nhưng ở 66–82 (GSC)."></span></td><td><span class="dot v0"></span></td><td><span class="dot v1" data-tip="&lt;b&gt;B6 Câu hỏi · trạm phụ:&lt;/b&gt; Nhóm &quot;phong cách nội thất nhật bản&quot; là câu hỏi &quot;là gì&quot;; trang phong cách Nhật chưa có đoạn trả lời dưới H1."></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td class="tp">T5</td></tr><tr data-i="5"><td class="nm">Phong cách theo tên</td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v1" data-tip="&lt;b&gt;B4 Canonical · trạm phụ:&lt;/b&gt; &quot;thiết kế nội thất chung cư đơn giản&quot; về trang chung cư tối giản, không về hub."></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v2" data-tip="&lt;b&gt;B7 Retrieve · trạm chính:&lt;/b&gt; Trang hiện đại đã index (URL Inspection 16/10) nhưng 0 impression cho head."></span></td><td><span class="dot v0"></span></td><td class="tp">T6</td></tr><tr data-i="6"><td class="nm">Công ty, dịch vụ, tphcm</td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v2" data-tip="&lt;b&gt;B4 Canonical · trạm chính:&lt;/b&gt; Một họ tìm đơn vị chia 2 URL."></span></td><td><span class="dot v1" data-tip="&lt;b&gt;B5 Context · trạm phụ:&lt;/b&gt; &quot;thiết kế nội thất chung cư tphcm&quot; #30, &quot;căn hộ tphcm&quot; #34; GSC: /cong-ty/ vị trí 6–7."></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td class="tp">T7</td></tr><tr data-i="7"><td class="nm">Head chung cư</td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v1" data-tip="&lt;b&gt;B4 Canonical · trạm phụ:&lt;/b&gt; &quot;đơn giản&quot; về trang tối giản, &quot;tphcm&quot; về /cong-ty/."></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v2" data-tip="&lt;b&gt;B7 Retrieve · trạm chính:&lt;/b&gt; &lt;span class=&quot;kt&quot;&gt;Giả thuyết: hub chưa vào nhóm ứng viên cho head; trang con m² đang thắng thay.&lt;/span&gt;"></span></td><td><span class="dot v0"></span></td><td class="tp">T8</td></tr><tr data-i="8"><td class="nm">Các phong cách, xu hướng, TC nhà phố</td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v0"></span></td><td><span class="dot v2" data-tip="&lt;b&gt;B7 Retrieve · trạm chính:&lt;/b&gt; Cả 4 trang đã index (URL Inspection 16/10) nhưng 0 impression cho head trong 28 ngày."></span></td><td><span class="dot v0"></span></td><td class="tp">T9</td></tr></tbody></table>
+      <div class="col reveal d3" style="width:540px;flex:none">
+        <div class="card mxc"><span class="lbl mxName"></span><p class="mxs mxStat"></p><p class="mxst mxStg"></p><p class="mxDiag"></p><p class="mxfix mxFix"></p></div>
+        <div class="mxlg"><span><i class="dot v2"></i>trạm chính</span><span><i class="dot v1"></i>trạm phụ</span></div>
+      </div>
+    </div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026 · trang thật GET 16/10/2026 (site_check.py, 23 URL) · GSC 17/09–16/10</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-aug" data-title="Augmentation" data-n="6" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Augmentation map</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; trên trang đang rank, thêm khối nào để phủ các biến thể chưa được phủ.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; khung trái là bố cục trang, đánh số theo khối. Bảng phải cho biết mỗi khối nhắm keyword nào và hạng hiện tại. Rê chuột lên khối hoặc dòng để thấy cặp tương ứng và giải thích đầy đủ.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Trang thi công: <span class="grad-text">mỗi nhóm query một khối</span></h2>
+    <div class="row grow">
+      <div class="wf reveal d2"><div class="nav">https://fhomesg.vn/thi-cong-noi-that-chung-cu/</div><div class="wb h1" data-k="1"><span>Title + H1 thi công · TP.HCM <small>①</small></span><div class=gal><i></i><i></i><i></i><i></i></div></div><div class="wb" data-k="2"><span>Bảng gói trọn gói <small>②</small></span></div><div class="wb" data-k="3"><span>Thiết kế và thi công một đầu mối <small>③</small></span></div><div class="wb" data-k="4"><span>Gói tiết kiệm <small>④</small></span></div><div class="wb" data-k="5"><span>Hạng mục + dự án thật <small>⑤</small></span></div><div class="wb" data-k="6"><span>Giá, quy trình, lưu ý: tóm tắt + link <small>⑥</small></span></div></div>
+      <div class="f1 reveal d3"><table class="tbl augt"><thead><tr><th style="width:52px"></th><th style="width:44%">Component trên trang</th><th>Keyword cam kết · hạng G1</th></tr></thead><tbody><tr data-k="1"><td><span class="k">1</span></td><td>Giữ "Thi công nội thất chung cư trọn gói tại TP.HCM". Thêm "căn hộ" vào đoạn mở.</td><td class="m qs">thi công nội thất chung cư <span class="rk r20">#20</span> · 8100<br>thi công nội thất căn hộ <span class="rk r20">#15</span> · 480<br>thi công nội thất chung cư tphcm <span class="rk r20">#11</span> · 40<br>thi công nội thất chung cư hcm <span class="rk r10">#8</span> · 20</td></tr><tr data-k="2"><td><span class="k">2</span></td><td>Gộp H2 "Các gói dịch vụ" thành một bảng: gói, hạng mục, thời gian, bảo hành.</td><td class="m qs">thi công nội thất chung cư trọn gói <span class="rk r20">#15</span> · 210<br>thiết kế nội thất chung cư trọn gói <span class="rk r10">#8</span> · 210<br>thi công nội thất chung cư trọn gói tphcm <span class="rk r10">#10</span> · 170<br>thiết kế thi công nội thất chung cư trọn gói <span class="rk r10">#8</span> · 20</td></tr><tr data-k="3"><td><span class="k">3</span></td><td>H2 mới, đoạn 40–60 từ: FHome làm cả thiết kế 3D và thi công, xưởng riêng.</td><td class="m qs">thiết kế thi công nội thất căn hộ <span class="rk r50">#62</span> · 1600<br>thiết kế thi công nội thất nhà chung cư <span class="rk r50">#43</span> · 880<br>thiết kế thi công nội thất chung cư <span class="rk r50">#26</span> · 140<br>thiết kế và thi công nội thất chung cư <span class="rk r10">#7</span> · 40</td></tr><tr data-k="4"><td><span class="k">4</span></td><td>Một dòng gói cơ bản trong bảng gói, ghi rõ phạm vi. Không viết "giá rẻ nhất".</td><td class="m qs">thi công nội thất chung cư giá rẻ <span class="rk r20">#11</span> · 30<br>thi công nội thất căn hộ giá rẻ <span class="rk r50">#25</span> · 10</td></tr><tr data-k="5"><td><span class="k">5</span></td><td>Giữ H2 hạng mục và dự án. Mỗi dự án ghi diện tích, số phòng, thời gian thi công.</td><td class="m qs">thi công hoàn thiện nội thất chung cư <span class="rk r3">#3</span> · 10<br>chuyên thi công nội thất chung cư <span class="rk r10">#4</span> · 10<br>thi công nội thất căn hộ chung cư <span class="rk r10">#6</span> · 90</td></tr><tr data-k="6"><td><span class="k">6</span></td><td>Thêm link thân bài sang trang giá, bài quy trình, bài lưu ý. Rút gọn khối chỉ sau đọc 12/11.</td><td class="m qs">giá thi công nội thất chung cư <span class="rk r20">#13</span> · 20<br>quy trình thi công nội thất chung cư <span class="rk r3">#1</span> · 20<br>lưu ý khi thi công nội thất chung cư <span class="rk r10">#8</span> · 20</td></tr></tbody></table></div>
+    </div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026 · H2 trang thật GET 16/10/2026 · lượt tìm: cột Volume SpySERP</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-lv" data-title="Ngoài chữ" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Ngoài nội dung</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; ngoài chữ và heading, cần làm gì với internal link, hình ảnh, chức năng và schema.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; mỗi cột là một nhóm việc. Nhãn đầu dòng là loại tác động: &lt;b&gt;Ranking&lt;/b&gt; ảnh hưởng hạng; &lt;b&gt;Kỹ thuật&lt;/b&gt; giúp Google đọc đúng trang; &lt;b&gt;UX&lt;/b&gt; giúp người mua, không đẩy hạng trực tiếp. Dòng dưới cùng là việc không nên làm.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Ngoài chữ: <span class="grad-text">4 nhóm việc</span> đi kèm</h2>
+    <div class="row grow"><div class="lv4" style="width:100%"><div class="lvc reveal d2"><h4>Internal link</h4><ul><li><span class="kd rank">Ranking</span><span class="lt">Trang thi công chỉ link trang giá ở footer, chưa link bài quy trình, bài lưu ý. Thêm link thân bài ở khối tóm tắt.</span></li><li><span class="kd rank">Ranking</span><span class="lt">Bài quy trình đang giữ nhánh "thiết kế thi công". Thêm link thân bài anchor "thi công nội thất chung cư trọn gói" về trang thi công.</span></li><li><span class="kd rank">Ranking</span><span class="lt">Hai bài lưu ý (thiết kế, thi công) chưa link nhau. Thêm một link mỗi chiều.</span></li><li><span class="kd rank">Ranking</span><span class="lt">Hub chung cư đã link 25 trang con, hub nhà phố link 17 trang con. Giữ, không thêm mục menu.</span></li></ul></div><div class="lvc reveal d3"><h4>Hình ảnh</h4><ul><li><span class="kd tech">Kỹ thuật</span><span class="lt">Ảnh thiếu alt: trang chủ 50/109, hub chung cư 30/129, trang thi công 31/98. Mẫu alt: [không gian] [diện tích] [dự án].</span></li><li><span class="kd ux">UX</span><span class="lt">Trang 50m², 60m² thêm mẫu ảnh thật theo dự án, ghi diện tích dưới ảnh (T2).</span></li><li><span class="kd tech">Kỹ thuật</span><span class="lt">Trang các phong cách 1,6 MB, 510 ảnh. Nén ảnh, lazy-load ảnh dưới màn hình đầu.</span></li></ul></div><div class="lvc reveal d4"><h4>Chức năng</h4><ul><li><span class="kd ux">UX</span><span class="lt">Card trang con trên hub là link thật: giữ. Không cần bộ lọc JavaScript.</span></li><li><span class="kd ux">UX</span><span class="lt">Form tư vấn cuối trang có trên mọi trang dịch vụ: giữ. Slideshow không giúp hạng.</span></li></ul></div><div class="lvc reveal d5"><h4>Schema</h4><ul><li><span class="kd tech">Kỹ thuật</span><span class="lt">JSON-LD của 23 trang đọc được (16/10). Lỗi ký tự điều khiển trang thiết kế nhà phố đã sửa.</span></li><li><span class="kd tech">Kỹ thuật</span><span class="lt">Khối business cũ có AggregateRating còn trên 23/23 trang: gỡ (đang làm). Đánh giá tự gắn không hiện sao.</span></li></ul></div></div></div><div class="lvno reveal d5"><b>Không làm</b><span>Viết trang mới cho head chung cư.</span><span>Thêm link sitewide hay mục menu mới để đẩy hạng.</span><span>Làm trang "FHome vs đối thủ".</span><span>Rút nội dung trang đang giữ Top 3/5 trước kỳ đo.</span></div><p class="src">Kiểm trang thật GET 16/10/2026 (site_check.py, 23 URL): link theo vùng menu/thân bài/footer, ảnh ngoài menu và footer, JSON-LD parse bằng json.</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide " data-title="Retrieve" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Trạm Retrieve</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; trang nào có trên site mà keyword vẫn không có hạng, và đã kiểm những gì.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; mỗi dòng là một trang cùng keyword cam kết của nó. Thẻ phải là điều đã kiểm bằng HTTP và giả thuyết cần GSC xác nhận. Lỗi Retrieve phải sửa trước mọi việc nội dung.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Retrieve: trang <span class="grad-text">có thật</span>, keyword không có hạng</h2>
+    <div class="row grow" style="gap:36px">
+      <table class="tbl gapt f1 reveal d2"><thead><tr><th style="width:27%">Trang trên site</th><th style="width:30%">Keyword cam kết</th><th style="width:10%">Hạng</th><th>Đã kiểm</th></tr></thead><tbody><tr><td class="m">/thiet-ke-noi-that-chung-cu/</td><td>thiết kế nội thất chung cư<br>thiết kế nội thất căn hộ chung cư<br>thiết kế nội thất căn hộ<br>mẫu thiết kế nội thất chung cư</td><td class="m">ngoài 100<br>ngoài 100<br>ngoài 100<br>ngoài 100</td><td>Index, canonical đúng, crawl lại 15/10. GSC 90 ngày: 0 impression cho head.</td></tr><tr><td class="m">/cac-phong-cach-thiet-ke-noi-that/</td><td>các phong cách thiết kế nội thất<br>những phong cách thiết kế nội thất<br>các phong cách trong thiết kế nội thất</td><td class="m">ngoài 100<br>ngoài 100<br>ngoài 100</td><td>Index, 1,6 MB, 510 ảnh. Crawl lần cuối 12/10.</td></tr><tr><td class="m">/phong-cach-thiet-ke/hien-dai/</td><td>phong cách thiết kế nội thất hiện đại<br>thiết kế nội thất phong cách hiện đại</td><td class="m">ngoài 100<br>ngoài 100</td><td>Index, có ở menu mọi trang. Crawl lần cuối 10/10.</td></tr><tr><td class="m">/xu-huong-thiet-ke-noi-that/</td><td>xu hướng thiết kế nội thất<br>xu hướng thiết kế nội thất hiện đại</td><td class="m">ngoài 100<br>ngoài 100</td><td>Index. Crawl lần cuối 07/09, trước nhiều lần sửa site.</td></tr><tr><td class="m">/thi-cong-noi-that-nha-pho/</td><td>thi công nội thất nhà phố<br>thi công nội thất nhà phố hcm</td><td class="m">ngoài 100<br>ngoài 100</td><td>Index, crawl 15/10. Title đổi 15/10 sang "Thi công … trọn gói".</td></tr></tbody></table>
+      <div class="col reveal d3" style="width:420px;flex:none">
+        <div class="card"><span class="lbl">Đã kiểm</span><p>URL Inspection 16/10: cả 5 trang đã index, canonical Google chọn trùng canonical khai báo, robots cho phép. Không phải lỗi kỹ thuật.</p></div>
+        <div class="card gradb"><span class="lbl">&lt;r&gt;Giả thuyết · cần GSC&lt;/r&gt;</span><p><span class="kt">Giả thuyết, cần GSC thêm 2 tuần: trang đã index nhưng chưa vào nhóm ứng viên cho head; hub chung cư trùng ý với trang con m², bài phong cách giống bài đối thủ.</span></p></div>
+      </div>
+    </div></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-qa" data-title="Hỏi đáp" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Hỏi đáp triển khai</b></span><span class="chr-r"><span class="howto" data-tip="Các câu team hay hỏi khi triển khai, trả lời bằng dữ liệu của dự án. Mỗi thẻ: câu trả lời ngắn, bằng chứng, việc làm.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Hỏi đáp <span class="grad-text">triển khai</span></h2>
+    <div class="row grow"><div class="qa4" style="width:100%"><div class="qa-c reveal d2"><div class="qq">Head 14.800 lượt: viết trang mới hay sửa hub?</div><p class="qa-a">Không viết trang mới. Hub đúng loại trang "N mẫu" của SERP và đã index.</p><p class="qa-e"><b>Bằng chứng:</b> SERP 14/10: 6/8 kết quả là trang "N mẫu". URL Inspection: hub index, canonical đúng. GSC 90 ngày: 0 impression cho head.</p><p class="qa-x"><b>Làm:</b> Đọc GSC theo tuần. Đến 29/10 vẫn 0 impression thì xét lại phần trùng giữa hub và trang con (T8).</p></div><div class="qa-c reveal d3"><div class="qq">Đổi URL target trong sheet có làm rơi hạng không?</div><p class="qa-a">Không. Sheet là kế hoạch đo, Google không đọc sheet.</p><p class="qa-e"><b>Bằng chứng:</b> 16/10 đổi target 18 keyword theo intent và GSC (Lead duyệt).</p><p class="qa-x"><b>Làm:</b> Trang đang giữ Top 10 cho keyword đã đổi target chưa rút nội dung tới khi URL target vào Top 10.</p></div><div class="qa-c reveal d4"><div class="qq">Muốn tăng nhanh số keyword Top 10, đẩy nhóm nào trước?</div><p class="qa-a">Nhóm đang ở #11–50 (63 keyword), không phải nhóm ngoài 100.</p><p class="qa-e"><b>Bằng chứng:</b> Nhóm ngoài 100 (52 keyword) chưa có impression trên GSC. Nhóm #11–50 đã được Google thử.</p><p class="qa-x"><b>Làm:</b> T1–T7 trước, T8–T9 theo dõi GSC.</p></div><div class="qa-c reveal d5"><div class="qq">Có cần thêm link sitewide, schema hay chức năng mới?</div><p class="qa-a">Không cần link sitewide. Schema chỉ gỡ khối AggregateRating cũ.</p><p class="qa-e"><b>Bằng chứng:</b> Menu đã có hub, thi công, nhà phố trên mọi trang. JSON-LD 23 trang đọc được.</p><p class="qa-x"><b>Làm:</b> Link thân bài theo slide Ngoài chữ.</p></div></div></div></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide " data-title="Ưu tiên" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Ưu tiên</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; làm topic nào trước, vì sao.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; mỗi dòng là một topic (gói việc T1, T2…). Topic ghi “mới” là đề xuất chưa kiểm chéo. Cột “Keyword” là số keyword cam kết topic đẩy, không trùng giữa các topic. P0 làm ngay, P1 làm trong đợt này, P2 làm sau khi xong P1.&lt;br&gt;&lt;b&gt;Nguyên tắc xếp:&lt;/b&gt; lỗi chặn hoặc làm rơi nhiều keyword cùng lúc làm trước; việc nhỏ cho keyword đã ở #6–10 làm tiếp; việc nội dung lớn trên trang đang giữ Top 3 làm sau khi chụp baseline.&lt;br&gt;&lt;br&gt;&lt;b&gt;Ở FHome Sài Gòn:&lt;/b&gt; Số keyword là keyword cam kết topic đẩy, không trùng giữa topic. P1 làm trong 2 tuần, P2 chờ dữ liệu.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Bảng ưu tiên template → <span class="grad-text">topic</span></h2>
+    <div class="row grow"><table class="tbl prt why reveal d2"><thead><tr><th style="width:7%">Topic</th><th style="width:18%">Template</th><th style="width:19%">Bằng chứng</th><th style="width:27%">Vì sao xếp ở đây</th><th style="width:7%">Keyword</th><th style="width:7%">Ưu tiên</th><th>Thời điểm</th></tr></thead><tbody><tr><td><span class="tid">T1</span><small class="stg">B4 · B3</small></td><td class="m">thi công nội thất chung cư [biến]</td><td>Top 10 0 → 10; 11/21 keyword về URL khác</td><td>Họ đang lan sau go-live. Head 8.100 lượt ở #20. Gom URL và thêm khối gỡ nhiều keyword cùng lúc.</td><td class="m">18</td><td><span class="pri mid">P1</span></td><td>Link tuần 1; nội dung sau 29/10</td></tr><tr><td><span class="tid">T2</span><small class="stg">B3 · B2</small></td><td class="m">chung cư [m² · phòng ngủ · phòng]</td><td>21 keyword #4–37, trang con có thật</td><td>Template đã thắng 20 Top 3. Biến thể anh em gần Top 10, việc nhỏ trên trang đã có.</td><td class="m">21</td><td><span class="pri mid">P1</span></td><td>Tuần 1–2 · 20–30/10</td></tr><tr><td><span class="tid">T7</span><small class="stg">B4 · B5</small></td><td class="m">[công ty · dịch vụ · tư vấn · tphcm]</td><td>Bài /cong-ty/ #3–8; 3 keyword tphcm #30–34</td><td>Bài đã giữ Top 10. Thêm một đoạn và link về bài, công sức nhỏ.</td><td class="m">8</td><td><span class="pri mid">P1</span></td><td>Tuần 1 · 17–22/10</td></tr><tr><td><span class="tid">T5</span><small class="stg">B4 · B6</small></td><td class="m">nội thất phong cách nhật bản [biến]</td><td>4 keyword #11–14; 2 keyword #6 trang phòng khách</td><td>Gần Top 10. Một đoạn định nghĩa và một link trên trang có sẵn.</td><td class="m">7</td><td><span class="pri mid">P1</span></td><td>Tuần 2 · 21–25/10</td></tr><tr><td><span class="tid">T4</span><small class="stg">B2 · B4</small></td><td class="m">[giá · chi phí] chung cư · nhà phố</td><td>Trang giá giữ 25/32 Top 10; "căn hộ" #16–19</td><td>Trang đang giữ Top 3: chỉ thêm cụm "căn hộ" vào H2, không rút.</td><td class="m">14</td><td><span class="pri mid">P1</span></td><td>Tuần 2 · 22–25/10</td></tr><tr><td><span class="tid">T3</span><small class="stg">B3 · B8</small></td><td class="m">nhà phố [hub · tầng · kích thước]</td><td>26 keyword #6–47; hub go-live 15/10</td><td>Nhóm #11–50 lớn nhất (12 keyword ở hub). Chờ 14 ngày sau go-live rồi mới sửa.</td><td class="m">26</td><td><span class="pri mid">P1</span></td><td>Sau 29/10</td></tr><tr><td><span class="tid">T6</span><small class="stg">B7 · B4</small></td><td class="m">nội thất phong cách [tên]</td><td>Tối giản, wabi sabi #17–24; hiện đại ngoài 100</td><td>Việc nội dung trên nhiều trang phong cách. Làm sau nhóm đang lan.</td><td class="m">14</td><td><span class="pri keep">P2</span></td><td>Tuần 3–4</td></tr><tr><td><span class="tid">T8</span><small class="stg">B7 · B4</small></td><td class="m">[mẫu] thiết kế nội thất chung cư [đẹp]</td><td>21/22 ngoài 100; hub index, 0 impression</td><td>Không phải lỗi kỹ thuật. Sửa thêm trước khi có dữ liệu GSC sau go-live là đoán.</td><td class="m">22</td><td><span class="pri keep">P2</span></td><td>Đọc GSC 29/10</td></tr><tr><td><span class="tid">T9</span><small class="stg">B7</small></td><td class="m">[các · xu hướng] phong cách · TC nhà phố</td><td>19 keyword ngoài 100; 4 trang đã index</td><td>Đã index nhưng chưa có impression. Giảm dung lượng ảnh, lập chỉ mục lại, rồi chờ GSC.</td><td class="m">19</td><td><span class="pri keep">P2</span></td><td>Tuần 2 kỹ thuật; GSC 12/11</td></tr></tbody></table></div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026 · số keyword theo _work/topics.json</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-ms" data-title="Đo" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Đo lường</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; đo thế nào để biết một topic có tác dụng.&lt;br&gt;&lt;b&gt;Vì sao đo theo template:&lt;/b&gt; Google xử lý cả họ query, nên hạng lên xuống theo họ. Đọc từng keyword dễ nhầm dao động thành kết quả.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; bảng trái là regex dán vào GSC để lọc cả họ. Các ngày bên phải cho biết khi nào đọc số. Luật đọc số giải thích cách bỏ lần chạy lỗi.&lt;br&gt;&lt;br&gt;&lt;b&gt;Ở FHome Sài Gòn:&lt;/b&gt; Dán regex vào GSC → Hiệu suất → Truy vấn → Bộ lọc → Biểu thức chính quy tùy chỉnh.">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Đo theo <span class="grad-text">template</span>, không đo từng keyword</h2>
+    <div class="row grow">
+      <div class="col f14 reveal d2"><p class="note why"><b>Vì sao đo theo template:</b> Google xử lý cả họ query, nên hạng lên xuống theo họ. Ở FHome, lần chạy 12/10 đẩy Top 10 lên 98 trước khi sửa trang: đọc từng ngày dễ nhầm dao động thành kết quả.</p><p class="note">Dán regex vào bộ lọc query của GSC để đọc cả họ keyword. SpySERP nhóm theo cùng template.</p>
+        <table class="tbl rxt"><thead><tr><th style="width:30%">Template</th><th>Regex</th></tr></thead><tbody><tr><td>Thi công chung cư (T1)</td><td><code class="rx">(?i)^(chuyên |thiết kế (và )?)?thi công (hoàn thiện )?nội thất (căn hộ|nhà chung cư|chung cư)|cư trọn gói</code></td></tr><tr><td>Giá chung cư (T4)</td><td><code class="rx">(?i)(giá|chi phí|bao nhiêu).*(chung cư|căn hộ)|(chung cư|căn hộ).*(giá|chi phí)</code></td></tr><tr><td>Trang con m² · phòng ngủ (T2)</td><td><code class="rx">(?i)(chung cư|căn hộ).*([0-9]+ ?m2?( |$)|nhỏ|[1-3] (phòng )?ngủ|phòng khách|bếp)</code></td></tr><tr><td>Nhà phố (T3)</td><td><code class="rx">(?i)nhà (mặt )?phố</code></td></tr><tr><td>Công ty · tphcm (T7)</td><td><code class="rx">(?i)công ty|dịch vụ|đơn vị|tư vấn|uy tín|tp ?hcm</code></td></tr><tr><td>Head chung cư (T8)</td><td><code class="rx">(?i)^(các )?(mẫu )?thiết kế nội thất (cho )?(nhà )?(chung cư|căn hộ)( chung cư)?( đẹp| hiện đại)?$</code></td></tr></tbody></table></div>
+      <div class="col" style="width:600px;flex:none">
+        <div class="card reveal d3"><div class="tline"><div class="tl-i"><div class="d">12–14/10</div><p>Baseline: median 3 lần chạy trước go-live, Top 3/5/10 = 56/72/98.</p></div><div class="tl-i"><div class="d">15/10</div><p>Go-live 6 trang dịch vụ. Bắt đầu nhật ký thay đổi theo URL.</p></div><div class="tl-i"><div class="d">29/10</div><p>Đọc lần 1 (14 ngày sau go-live) bằng median 27–29/10 theo template.</p></div><div class="tl-i"><div class="d">12/11</div><p>Đọc lần 2, quyết mở rộng hay dừng từng topic. Trang Top 3/5 chỉ thêm, không rút.</p></div></div></div>
+        <div class="card gradb reveal d4"><span class="lbl">Luật đọc số</span><p>Bỏ lần chạy thiếu dữ liệu. Đọc median các lần chạy hợp lệ, không đọc số của một ngày.</p></div>
+      </div>
+    </div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026 · GSC sc-domain:fhomesg.vn</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+<section class="slide s-plan" data-title="Kế hoạch" data-qp="fhome-sai-gon">
+  <div class="bg-grid"></div>
+  <header class="chrome"><span class="sec">02 · <b>FHome Sài Gòn · Kế hoạch hành động</b></span><span class="chr-r"><span class="howto" data-tip="&lt;b&gt;Slide trả lời:&lt;/b&gt; ai làm gì, khi nào, thế nào là xong.&lt;br&gt;&lt;b&gt;Đọc:&lt;/b&gt; mỗi dòng là một việc. Cột “Xong khi” là tiêu chí kiểm. Rê chuột lên dòng để xem vì sao làm việc đó. Bấm vào dòng để đánh dấu đã xong (chỉ giữ trong lần xem này).">Cách đọc slide</span><span class="pgn"></span></span></header>
+  <div class="wrap">
+    <h2 class="h2 reveal d1">Kế hoạch hành động: <span class="grad-text">Lê Minh Tuấn</span> (16–30/10)</h2>
+    <div class="row grow"><table class="tbl plt reveal d2"><thead><tr><th style="width:11%">Khi nào</th><th style="width:47%">Việc</th><th style="width:9%">Ai làm</th><th>Xong khi</th></tr></thead><tbody><tr><td class="m">16–18/10</td><td><span class="ck"></span>Gỡ khối business cũ có AggregateRating trên toàn site.</td><td>Anh Tuyên (dev)</td><td>GET 23 trang không còn aggregateRating; Rich Results Test không lỗi.</td></tr><tr><td class="m">17/10</td><td><span class="ck"></span>Lưu baseline median 12–14/10 theo 16 template và regex GSC; mở nhật ký thay đổi theo URL.</td><td>Lê Minh Tuấn</td><td>File baseline và nhật ký trong _work.</td></tr><tr><td class="m">17–20/10</td><td><span class="ck"></span>Link thân bài: trang thi công → trang giá, bài quy trình, bài lưu ý; bài quy trình → trang thi công; hai bài lưu ý link nhau (T1).</td><td>Tuấn (content)</td><td>GET thấy các link mới trong thân bài, ghi ngày vào nhật ký.</td></tr><tr><td class="m">17–22/10</td><td><span class="ck"></span>Bài /cong-ty/: thêm đoạn dịch vụ thiết kế chung cư tại TP.HCM; trang thi công link về bài (T7).</td><td>Tuấn (content)</td><td>Bài có đoạn mới; GET thấy link từ trang thi công.</td></tr><tr><td class="m">20–25/10</td><td><span class="ck"></span>Trang 50m², 60m², 1PN, 2PN: thêm mẫu ảnh thật, đưa "căn hộ" vào đoạn mở và H2 (T2).</td><td>Tuấn (content)</td><td>Mỗi trang có thêm ít nhất 6 mẫu ảnh thật ghi diện tích.</td></tr><tr><td class="m">21–25/10</td><td><span class="ck"></span>Trang phong cách Nhật: đoạn định nghĩa dưới H1; trang phòng khách Nhật link anchor "phong cách nội thất Nhật Bản" (T5).</td><td>Tuấn (content)</td><td>GET thấy đoạn mới và link mới.</td></tr><tr><td class="m">22–25/10</td><td><span class="ck"></span>Trang giá chung cư: thêm cụm "căn hộ" vào H2 bảng giá, không xoá khối nào (T4).</td><td>Lê Minh Tuấn</td><td>H2 có "căn hộ"; số khối giữ nguyên.</td></tr><tr><td class="m">Tuần 2</td><td><span class="ck"></span>Trang các phong cách: nén ảnh; bài xu hướng: yêu cầu lập chỉ mục lại (T9).</td><td>Anh Tuyên (dev)</td><td>Trang dưới 1 MB; GSC ghi lần crawl mới.</td></tr><tr><td class="m">29/10</td><td><span class="ck"></span>Đọc median 27–29/10 so với baseline theo template; đọc GSC impression head chung cư (T8).</td><td>Lê Minh Tuấn</td><td>Bảng trước/sau theo template, quyết việc cho T1, T3.</td></tr><tr><td class="m">30/10</td><td><span class="ck"></span>Trang thi công: thêm khối thiết kế và thi công, gói tiết kiệm. Chưa rút H2 báo giá: trang đang giữ #3–5 cho 3 keyword (T1).</td><td>Tuấn (content)</td><td>Trang có thêm 2 khối mới; các khối cũ giữ nguyên.</td></tr></tbody></table></div>
+    <div class="pcards reveal d3"><div class="pcard g"><b>Nhắc:</b> Trước kỳ đo, trang đang giữ Top 3 hoặc Top 5 chỉ thêm nội dung, không rút.</div></div><p class="src">SpySERP · FHomesg - 226 Key cam kết (export 14/10 + tab Follow ranking 16/10) · G1 · median 3 lần 14–16/10/2026 · so với 17–19/09/2026</p></div>
+  <footer class="foot"><span>Query Processing · đẩy keyword cam kết</span><span>Tài liệu nội bộ GTV · không gửi khách</span></footer>
+</section>
+</main>
+</div>
+<nav class="deck-controls" aria-label="Điều hướng slide">
+  <button id="prevBtn" aria-label="Slide trước">‹</button><span id="counter">1 / 16</span><button id="nextBtn" aria-label="Slide sau">›</button>
+</nav>
+<script>
+/* ===========================================
+   DECK CONTROLLER — scale stage, điều hướng, hash, QA mode
+   =========================================== */
+const QA = /[?&]qa\b/.test(location.search);
+if (QA) document.documentElement.classList.add('qa');
+
+class SlidePresentation {
+  constructor() {
+    this.stage = document.getElementById('deckStage');
+    this.slides = [...document.querySelectorAll('.slide')];
+    this.cur = 0;
+    const total = String(this.slides.length).padStart(2, '0');
+    this.slides.forEach((s, i) => { const p = s.querySelector('.pgn'); if (p) p.textContent = String(i + 1).padStart(2, '0') + ' / ' + total; });
+    this.setupScale(); this.setupKeys(); this.setupTouch(); this.setupWheel();
+    document.getElementById('prevBtn').onclick = () => this.go(this.cur - 1);
+    document.getElementById('nextBtn').onclick = () => this.go(this.cur + 1);
+    const h = parseInt(location.hash.slice(1), 10);
+    this.go(Number.isFinite(h) ? h - 1 : 0);
+  }
+  setupScale() {
+    const scale = () => {
+      const f = Math.min(innerWidth / 1920, innerHeight / 1080);
+      this.stage.style.transform = `translate(${(innerWidth - 1920 * f) / 2}px, ${(innerHeight - 1080 * f) / 2}px) scale(${f})`;
+    };
+    scale(); addEventListener('resize', scale);
+  }
+  isTyping(t) { return t.closest && t.closest('input,textarea,select,[contenteditable="true"]'); }
+  setupKeys() {
+    document.addEventListener('keydown', e => {
+      if (this.isTyping(e.target)) return;
+      if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); this.go(this.cur + 1); }
+      if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); this.go(this.cur - 1); }
+      if (e.key === 'Home') this.go(0);
+      if (e.key === 'End') this.go(this.slides.length - 1);
+    });
+  }
+  setupTouch() {
+    let x0 = null;
+    addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+    addEventListener('touchend', e => {
+      if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 50) this.go(this.cur + (dx < 0 ? 1 : -1)); x0 = null;
+    });
+  }
+  setupWheel() {
+    let lock = false;
+    addEventListener('wheel', e => {
+      if (lock || Math.abs(e.deltaY) < 30 || this.isTyping(e.target)) return;
+      lock = true; this.go(this.cur + (e.deltaY > 0 ? 1 : -1)); setTimeout(() => lock = false, 800);
+    }, { passive: true });
+  }
+  go(i) {
+    this.cur = Math.max(0, Math.min(i, this.slides.length - 1));
+    this.slides.forEach((s, k) => { s.classList.toggle('active', k === this.cur); s.classList.toggle('visible', k === this.cur); });
+    document.getElementById('counter').textContent = (this.cur + 1) + ' / ' + this.slides.length;
+    document.getElementById('progress').style.width = ((this.cur + 1) / this.slides.length * 100) + '%';
+    history.replaceState(null, '', location.pathname + location.search + '#' + (this.cur + 1));
+    this.slides[this.cur].dispatchEvent(new CustomEvent('enter'));
+  }
+}
+
+
+const QP = {"fhome-sai-gon": {"tg": {"cc_m2_nho": {"base": "thiết kế nội thất chung cư", "slot": "[m² · nhỏ]", "read": "Biến thể m², \"nhỏ\" giữ 20 keyword Top 3, mỗi biến thể một trang con. 50m², 60m² và các cách gõ \"căn hộ\" còn ở #17–37.", "act": "Trang 50m², 60m²: thêm mẫu ảnh thật theo dự án. Đưa cụm \"căn hộ\" vào đoạn mở và H2 của trang con. Không đụng trang đang #1–3.", "topic": "T2 · P1 · công sức vừa", "chips": [["mẫu nhỏ", 1, 1, 0, "mẫu thiết kế nội thất chung cư nhỏ"], ["căn hộ nhỏ", 1, 1, 0, "thiết kế nội thất căn hộ chung cư nhỏ"], ["căn hộ nhỏ", 1, 1, 0, "thiết kế nội thất căn hộ nhỏ"], ["cho căn hộ nhỏ", 1, 1, 0, "thiết kế nội thất cho căn hộ chung cư nhỏ"], ["cho căn hộ nhỏ", 1, 1, 0, "thiết kế nội thất cho căn hộ nhỏ"], ["cho nhà nhỏ", 1, 1, 0, "thiết kế nội thất cho nhà chung cư nhỏ"], ["100m2", 1, 1, 0, "thiết kế nội thất chung cư 100m2"], ["70m2", 1, 1, 0, "thiết kế nội thất chung cư 70m2"], ["80m2", 1, 2, 0, "thiết kế nội thất chung cư 80m2"], ["diện tích nhỏ", 1, 1, 0, "thiết kế nội thất chung cư diện tích nhỏ"], ["nhỏ", 1, 1, 0, "thiết kế nội thất chung cư nhỏ"], ["nhỏ đẹp", 1, 1, 0, "thiết kế nội thất chung cư nhỏ đẹp"]]}, "tc_cc": {"base": "thi công nội thất chung cư", "slot": "[biến]", "read": "Họ thi công lan nhanh: 10/21 keyword Top 10, head #41 → #20. Nhánh \"thiết kế thi công\" (6 keyword) còn về bài quy trình hoặc trang giá.", "act": "Trang thi công: thêm khối \"thiết kế và thi công một đầu mối\", gói tiết kiệm, link thân bài sang trang giá, bài quy trình, bài lưu ý.", "topic": "T1 · P1 · công sức vừa", "chips": [["thi công hoàn thiện", 3, 48, 0, "thi công hoàn thiện nội thất chung cư"], ["chuyên thi công", 4, null, 0, "chuyên thi công nội thất chung cư"], ["thi công nhà", 5, 19, 0, "thi công nội thất nhà chung cư"], ["thi công căn hộ", 6, 21, 0, "thi công nội thất căn hộ chung cư"], ["thi công tphcm", 6, 39, 0, "thiết kế thi công nội thất chung cư tphcm"], ["và thi công", 7, 87, 0, "thiết kế và thi công nội thất chung cư"], ["thi công hcm", 8, 23, 0, "thi công nội thất chung cư hcm"], ["trọn gói", 8, 15, 0, "thiết kế nội thất chung cư trọn gói"], ["thi công trọn gói", 8, 16, 0, "thiết kế thi công nội thất chung cư trọn gói"], ["thi công trọn gói tphcm", 10, 28, 0, "thi công nội thất chung cư trọn gói tphcm"], ["thi công giá rẻ", 11, 21, 0, "thi công nội thất chung cư giá rẻ"], ["thi công tphcm", 11, 25, 0, "thi công nội thất chung cư tphcm"]]}, "gia_cc": {"base": "nội thất chung cư", "slot": "[giá · chi phí]", "read": "Trang giá giữ 22/27 keyword Top 10, phần lớn #1–5. Các cách gõ \"căn hộ\" yếu hơn: \"giá thiết kế nội thất căn hộ\" #19.", "act": "Giữ trang giá, chỉ thêm. Thêm cụm \"căn hộ\" vào H2 bảng giá. Anchor \"báo giá…\" từ hub thi công đã trỏ về đây.", "topic": "T4 · P1 · công sức nhỏ", "chips": [["báo giá thi công cho nhỏ", 1, 1, 0, "báo giá thi công nội thất cho chung cư nhỏ"], ["báo giá thi công nhỏ", 1, 1, 0, "báo giá thi công nội thất chung cư nhỏ"], ["báo giá thi công", 1, 1, 0, "báo giá thiết kế thi công nội thất chung cư"], ["đơn giá thi công", 1, 1, 0, "đơn giá thi công nội thất chung cư"], ["báo giá thi công", 2, 2, 0, "báo giá thi công nội thất chung cư"], ["bảng giá", 3, 3, 0, "bảng giá thiết kế nội thất chung cư"], ["báo giá thi công căn hộ", 3, 2, 0, "báo giá thi công nội thất căn hộ chung cư"], ["báo giá căn hộ", 3, 4, 0, "báo giá thiết kế nội thất căn hộ"], ["báo giá", 3, 2, 0, "báo giá thiết kế nội thất chung cư"], ["giá", 3, 2, 0, "giá thiết kế nội thất chung cư"], ["giá cao cấp", 3, 3, 0, "giá thiết kế nội thất chung cư cao cấp"], ["chi phí căn hộ", 4, 5, 0, "chi phí thiết kế nội thất căn hộ"]]}, "tk_nhapho": {"base": "thiết kế nội thất nhà phố", "slot": "[đẹp · mẫu]", "read": "Hub nhà phố mới có hạng: 12/15 keyword ở #16–47, chưa keyword nào Top 10. Hub đã link 17 trang con nhà phố.", "act": "Chờ đọc 29/10. Sau đó phủ biến thể \"mẫu\", \"đẹp\", \"hiện đại\" bằng khối mẫu theo phong cách có ảnh thật.", "topic": "T3 · P1 · công sức vừa", "chips": [["mẫu nhà phố đẹp", 16, 39, 0, "mẫu nội thất nhà phố đẹp"], ["nhà phố đẹp", 17, 27, 0, "nội thất nhà phố đẹp"], ["mẫu nhà phố", 24, null, 0, "mẫu nội thất nhà phố"], ["mẫu nhà phố", 24, null, 0, "mẫu thiết kế nội thất nhà phố"], ["nhà mặt phố", 24, null, 0, "thiết kế nội thất nhà mặt phố"], ["nhà phố", 24, null, 0, "thiết kế nội thất nhà phố"], ["nhà phố đẹp", 24, 38, 0, "thiết kế nội thất nhà phố đẹp"], ["cho nhà phố", 27, null, 0, "thiết kế nội thất cho nhà phố"], ["nhà phố tphcm", 28, null, 0, "thiết kế nội thất nhà phố tphcm"], ["mẫu nhà phố đẹp", 34, 32, 0, "mẫu thiết kế nội thất nhà phố đẹp"], ["nhà phố đơn giản", 44, null, 0, "nội thất nhà phố đơn giản"], ["nhà phố rẻ", 47, null, 0, "thiết kế nội thất nhà phố rẻ"]]}, "head_cc": {"base": "thiết kế nội thất chung cư", "slot": "[mẫu · đẹp]", "read": "21/25 keyword ngoài 100. Hub chung cư đã index, đúng canonical, đã link 25 trang con. GSC 90 ngày: 0 impression cho head.", "act": "Không viết trang mới. Theo dõi impression head trên GSC sau go-live. <span class=\"kt\">Giả thuyết: hub chưa vào nhóm ứng viên, cần GSC thêm 2 tuần.</span>", "topic": "T8 · P2 · công sức lớn", "chips": [["tại tp hcm", 6, 26, 0, "thiết kế nội thất chung cư tại tp hcm"], ["đơn giản", 21, null, 0, "thiết kế nội thất chung cư đơn giản"], ["tphcm", 30, 32, 0, "thiết kế nội thất chung cư tphcm"], ["căn hộ tphcm", 34, null, 0, "thiết kế nội thất căn hộ tphcm"], ["các mẫu", null, null, 1, "các mẫu thiết kế nội thất chung cư"], ["các mẫu đẹp", null, null, 1, "các mẫu thiết kế nội thất chung cư đẹp"], ["các mẫu nhà", null, null, 1, "các mẫu thiết kế nội thất nhà chung cư"], ["các mẫu nhà đẹp", null, null, 1, "các mẫu thiết kế nội thất nhà chung cư đẹp"], ["mẫu", null, null, 1, "mẫu thiết kế nội thất chung cư"], ["mẫu đẹp", null, null, 1, "mẫu thiết kế nội thất chung cư đẹp"], ["mẫu nhà", null, null, 1, "mẫu thiết kế nội thất nhà chung cư"], ["căn hộ", null, null, 1, "thiết kế nội thất căn hộ"]]}}, "mx": [["Thi công chung cư", "21 keyword · Top 10 = 10", "Trạm phụ: B3 Augment · Trạm chính: B4 Canonical", "Trang thi công giữ 10 keyword Top 10. 5 keyword về trang giá, 5 về bài quy trình. Trang chưa link thân bài sang trang giá, bài quy trình, bài lưu ý.", "<b>Việc làm:</b> https://fhomesg.vn/thi-cong-noi-that-chung-cu/: thêm khối thiết kế và thi công, gói tiết kiệm, link thân bài sang trang giá, bài quy trình, bài lưu ý. Chưa rút khối cũ."], ["Trang con chung cư", "21 keyword · #4–37", "Trạm phụ: B2 Segment · Trạm chính: B3 Augment", "Trang 50m² #22, 60m² #26. Cách gõ \"căn hộ\" kém cách gõ \"chung cư\": căn hộ 1PN #16 so với chung cư 1PN #5.", "<b>Việc làm:</b> Trang /thiet-ke-noi-that-chung-cu/50m2/, /60m2/, /1-phong-ngu/, /2-phong-ngu/: thêm mẫu ảnh thật, đưa \"căn hộ\" vào đoạn mở và H2."], ["Nhà phố: hub và trang con", "26 keyword · #6–47", "Trạm chính: B3 Augment · Trạm phụ: B8 Passage", "Hub nhà phố go-live 15/10, đã link 17 trang con. Head #24, dao động #13–#28. Trang 2 tầng, 5x20 #25; 3 tầng #39.", "<b>Việc làm:</b> Sau 29/10: https://fhomesg.vn/thiet-ke-noi-that-nha-pho/ thêm khối mẫu theo phong cách; trang /2-tang/, /3-tang/, /5x20m/ thêm mẫu và đoạn bố trí."], ["Giá chung cư và nhà phố", "32 keyword · Top 10 = 25", "Trạm chính: B2 Segment · Trạm phụ: B4 Canonical", "Trang giá chung cư giữ 22/27 Top 10. Cách gõ \"căn hộ\" yếu: \"giá thiết kế nội thất căn hộ\" #19, \"báo giá trọn gói thi công … căn hộ\" #16.", "<b>Việc làm:</b> https://fhomesg.vn/gia-thiet-ke-thi-cong-noi-that-chung-cu/: thêm \"căn hộ\" vào H2 bảng giá. Giữ nội dung, chỉ thêm."], ["Nhật Bản: 3 URL", "13 keyword · Top 10 = 8", "Trạm chính: B4 Canonical · Trạm phụ: B6 Câu hỏi", "Trang phòng khách Nhật giữ 12/13 keyword, kể cả nhóm \"chung cư\" (#6) và \"phong cách…\" (#11–14).", "<b>Việc làm:</b> https://fhomesg.vn/phong-cach-thiet-ke/nhat-ban/: thêm đoạn định nghĩa dưới H1. Trang phòng khách Nhật link anchor \"phong cách nội thất Nhật Bản\"."], ["Phong cách theo tên", "17 keyword · Top 10 = 4", "Trạm phụ: B4 Canonical · Trạm chính: B7 Retrieve", "Nhánh \"hiện đại\" 5 keyword ngoài 100 dù trang /phong-cach-thiet-ke/hien-dai/ có ở menu. Tối giản, wabi sabi #17–24.", "<b>Việc làm:</b> https://fhomesg.vn/phong-cach-thiet-ke/hien-dai/: theo dõi GSC. Trang /toi-gian/, /wabi-sabi/: thêm mẫu ảnh thật và đoạn đặc trưng dưới H1."], ["Công ty, dịch vụ, tphcm", "12 keyword · Top 10 = 9", "Trạm chính: B4 Canonical · Trạm phụ: B5 Context", "Bài /cong-ty/ giữ 7 keyword #3–8. \"dịch vụ … chung cư\", \"tư vấn … nhà chung cư\" về trang thi công #7–9.", "<b>Việc làm:</b> https://fhomesg.vn/cong-ty-thiet-ke-noi-that/: thêm đoạn dịch vụ thiết kế chung cư tại TP.HCM; trang thi công link về bài này."], ["Head chung cư", "22 keyword · 21 ngoài 100", "Trạm phụ: B4 Canonical · Trạm chính: B7 Retrieve", "Hub chung cư đã index, canonical đúng, crawl lại 15/10. GSC 90 ngày: 0 impression cho \"thiết kế nội thất chung cư\".", "<b>Việc làm:</b> https://fhomesg.vn/thiet-ke-noi-that-chung-cu/: không viết trang mới. Đọc GSC theo tuần từ 15/10; 29/10 vẫn 0 impression thì xét lại phần trùng giữa hub và trang con."], ["Các phong cách, xu hướng, TC nhà phố", "19 keyword · 19 ngoài 100", "Trạm chính: B7 Retrieve", "Trang các phong cách 1,6 MB, 510 ảnh. Bài xu hướng crawl lần cuối 07/09. Trang thi công nhà phố đổi title 15/10, chưa từng có hạng.", "<b>Việc làm:</b> https://fhomesg.vn/cac-phong-cach-thiet-ke-noi-that/: giảm dung lượng ảnh. https://fhomesg.vn/xu-huong-thiet-ke-noi-that/: yêu cầu lập chỉ mục lại. Theo dõi GSC."]], "has": true, "depth": 100, "cmp": true, "cl": "18/09", "first": "cc_m2_nho", "gloss": [["FHomesg - 226 Key cam kết", "Project SpySERP đo bộ 226 keyword cam kết, engine G1."], ["go-live", "Ngày 15/10/2026, 6 trang dịch vụ lên giao diện mới."], ["G1", "Engine đo hạng trong SpySERP: Google, tiếng Việt, TP.HCM. Team báo cáo theo engine này."], ["T1", "<b>Topic T1</b> (P1, Link tuần 1; nội dung sau 29/10): thi công nội thất chung cư [biến]. Bằng chứng: Top 10 0 → 10; 11/21 keyword về URL khác."], ["T2", "<b>Topic T2</b> (P1, Tuần 1–2 · 20–30/10): chung cư [m² · phòng ngủ · phòng]. Bằng chứng: 21 keyword #4–37, trang con có thật."], ["T7", "<b>Topic T7</b> (P1, Tuần 1 · 17–22/10): [công ty · dịch vụ · tư vấn · tphcm]. Bằng chứng: Bài /cong-ty/ #3–8; 3 keyword tphcm #30–34."], ["T5", "<b>Topic T5</b> (P1, Tuần 2 · 21–25/10): nội thất phong cách nhật bản [biến]. Bằng chứng: 4 keyword #11–14; 2 keyword #6 trang phòng khách."], ["T4", "<b>Topic T4</b> (P1, Tuần 2 · 22–25/10): [giá · chi phí] chung cư · nhà phố. Bằng chứng: Trang giá giữ 25/32 Top 10; \"căn hộ\" #16–19."], ["T3", "<b>Topic T3</b> (P1, Sau 29/10): nhà phố [hub · tầng · kích thước]. Bằng chứng: 26 keyword #6–47; hub go-live 15/10."], ["T6", "<b>Topic T6</b> (P2, Tuần 3–4): nội thất phong cách [tên]. Bằng chứng: Tối giản, wabi sabi #17–24; hiện đại ngoài 100."], ["T8", "<b>Topic T8</b> (P2, Đọc GSC 29/10): [mẫu] thiết kế nội thất chung cư [đẹp]. Bằng chứng: 21/22 ngoài 100; hub index, 0 impression."], ["T9", "<b>Topic T9</b> (P2, Tuần 2 kỹ thuật; GSC 12/11): [các · xu hướng] phong cách · TC nhà phố. Bằng chứng: 19 keyword ngoài 100; 4 trang đã index."]]}};
+const QG = [["query đại diện", "Query Google chọn làm tâm của một cụm cách gõ gần nghĩa (US8645407B2). Google xử lý cả cụm theo query này, nên trang khớp query đại diện có thể nhận hạng cho cả họ."], ["URL đại diện", "URL site chọn để Google trả cho cả một họ query. Mỗi họ chỉ nên có một URL đại diện. Hai URL cùng nhắm một họ thì Google phải chọn, và hay lật qua lại."], ["query template|template", "Họ keyword cùng cấu trúc, chỉ khác một ô biến. Ví dụ “[sản phẩm] [size]”. Theo Koray, khi site thắng vài biến thể, Google thử site cho cả họ; Google chưa công bố cơ chế này."], ["biến thể", "Một cách điền vào ô biến của template. Ví dụ “10 inch” là một biến thể của “rattan pendant light [size]”."], ["retrieve", "Bước Google lấy trang vào danh sách ứng viên trước khi chấm hạng (trạm B7). Trang không được retrieve thì không có hạng, dù nội dung tốt."], ["noindex", "Thẻ meta robots báo Google không đưa trang vào chỉ mục. Trang noindex không có hạng; lâu dài Google cũng ít đi theo link trên trang đó."], ["tự canonical", "Trang khai thẻ canonical trỏ về chính nó: báo Google đây là bản chính."], ["median", "Số ở giữa khi xếp các lần đo theo thứ tự. Ví dụ hạng 5, 9, 30 có median 9. Median bỏ qua một lần đo lệch, nên ổn định hơn đọc một lần chạy."], ["lần chạy đủ|lần chạy thiếu", "Lần chạy đủ: SpySERP quét được gần hết bộ keyword. Lần chạy thiếu: quét được rất ít keyword, nên bị bỏ khi tính số."], ["PDP", "Product Detail Page: trang chi tiết của một sản phẩm."], ["anchor", "Chữ hiển thị của link. Google dùng anchor để hiểu trang đích nói về gì. Một anchor nên trỏ về một URL."], ["SERP", "Trang kết quả tìm kiếm của Google."], ["DR\\d+", "Domain Rating của Ahrefs (0–100): đo sức mạnh backlink của cả domain."], ["ngoài \\d+", "Keyword không xuất hiện trong số kết quả SpySERP quét. Không có nghĩa là hạng ngay sau độ sâu đó."], ["augmentation map|augment", "Google mở rộng query thành các biến thể gần nghĩa (trạm B3). Trang phủ được các biến thể này trên cùng URL thì được chấm cho cả họ."], ["component", "Một khối trên trang (bảng, H3, nhóm card sản phẩm, đoạn trả lời) phục vụ một nhóm query."], ["K2Q", "Keyword-to-Question: Google đổi keyword thành câu hỏi ngầm để tìm đoạn trả lời (trạm B6)."], ["passage", "Đoạn văn Google trích để trả lời (trạm B8). Đoạn trả lời nên nằm ngay dưới heading và tự đủ nghĩa."], ["lan trust", "Cách Koray mô tả: Google thử site ở một biến thể; nếu người dùng hài lòng, Google thử tiếp các biến thể cùng cấu trúc. Google chưa công bố cơ chế này."], ["JSON-LD", "Cách viết structured data (schema.org) trong thẻ script. Google đọc khối này để hiểu loại trang và sản phẩm. Một lỗi cú pháp làm Google bỏ cả khối."], ["Rich Results Test", "Công cụ của Google kiểm structured data của một URL: search.google.com/test/rich-results."], ["URL Inspection", "Công cụ trong Google Search Console: cho biết URL đã index chưa, Google chọn canonical nào, lần crawl gần nhất."], ["GSC", "Google Search Console."], ["regex", "Biểu thức chính quy: mẫu chữ dùng để lọc nhiều query cùng lúc trong GSC."], ["click depth", "Số lần bấm từ trang chủ tới trang. Trang càng sâu thì Googlebot càng ít ghé."], ["baseline", "Số đo trước khi sửa, dùng để so sánh sau khi sửa."]];
+
+(function () {
+  const cls = p => !p ? 'rout' : p <= 3 ? 'r3' : p <= 10 ? 'r10' : p <= 20 ? 'r20' : 'r50';
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  document.querySelectorAll('.s-tg').forEach(root => {
+    const D = QP[root.dataset.qp], q = c => root.querySelector(c);
+    let key = D.first, timers = [], chips = [];
+    function render() {
+      const d = D.tg[key];
+      q('.tgLine').innerHTML = `${d.base} <span class="slot">${d.slot}</span>`;
+      q('.tgChips').innerHTML = d.chips.map((c, i) => {
+        const was = !D.has ? 'chưa có số đo' : !D.cmp ? 'chưa có mốc so sánh' : c[2] ? `${D.cl}: #${c[2]}` : `${D.cl}: ngoài ${D.depth}`;
+        const now = !D.has ? '—' : c[1] ? '#' + c[1] : '—';
+        const tip = esc(`<b>${c[4]}</b><br>Hạng nay: ${now === '—' ? 'ngoài ' + D.depth : now} · ${was}${c[3] ? '<br>Viền hồng: site có trang cho biến thể này nhưng keyword chưa vào độ sâu đo.' : ''}`);
+        return `<div class="tchip${c[3] ? ' gap' : ''}" data-i="${i}" data-tip="${tip}"><div class="v">${c[0]}</div><div class="m">${was}</div><span class="rk ${D.has ? cls(c[1]) : 'rout'}">${now}</span></div>`;
+      }).join('');
+      chips = [...q('.tgChips').children];
+      chips.forEach((c, i) => c.addEventListener('click', () => ripple(i)));
+      q('.tgRead').innerHTML = d.read; q('.tgAct').innerHTML = d.act; q('.tgTopic').textContent = d.topic;
+      reset();
+      if (QA) { const s = seedIdx(); chips[s].classList.add('seed'); chips.forEach((c, i) => { if (i !== s && d.chips[i][1]) c.classList.add('lit'); }); }
+    }
+    function seedIdx() { const d = D.tg[key]; let b = 0; d.chips.forEach((c, i) => { if (c[1] && (!d.chips[b][1] || c[1] < d.chips[b][1])) b = i; }); return b; }
+    function reset() { timers.forEach(clearTimeout); timers = []; chips.forEach(c => c.classList.remove('lit', 'seed')); q('.tgMsg').textContent = ''; }
+    function ripple(i0) {
+      reset(); const d = D.tg[key];
+      chips[i0].classList.add('seed');
+      q('.tgMsg').textContent = `Google thử site ở biến thể “${d.chips[i0][0]}”, rồi thử các biến thể cùng cấu trúc.`;
+      const r0 = Math.floor(i0 / 4), c0 = i0 % 4;
+      chips.forEach((c, i) => { if (i === i0) return; const dd = Math.abs(Math.floor(i / 4) - r0) + Math.abs(i % 4 - c0); timers.push(setTimeout(() => c.classList.add('lit'), 500 + dd * 280)); });
+    }
+    root.querySelectorAll('.tgTabs .btn').forEach(b => b.onclick = () => { root.querySelectorAll('.tgTabs .btn').forEach(x => x.classList.remove('on')); b.classList.add('on'); key = b.dataset.t; render(); });
+    q('.tgRun').onclick = () => ripple(seedIdx());
+    q('.tgReset').onclick = reset;
+    render();
+  });
+  document.querySelectorAll('.s-mx').forEach(root => {
+    const MX = QP[root.dataset.qp].mx, rows = root.querySelectorAll('.mxT tbody tr');
+    function sel(i) { rows.forEach(r => r.classList.toggle('sel', +r.dataset.i === i)); ['.mxName', '.mxStat', '.mxStg', '.mxDiag', '.mxFix'].forEach((c, k) => { const el = root.querySelector(c); el.innerHTML = MX[i][k] || ''; el.style.display = MX[i][k] ? '' : 'none'; }); }
+    rows.forEach(r => r.addEventListener('click', () => sel(+r.dataset.i)));
+    sel(0);
+  });
+  document.querySelectorAll('.s-aug').forEach(root => {
+    const rows = root.querySelectorAll('.augt tbody tr'), blocks = root.querySelectorAll('.wf .wb'), n = +root.dataset.n;
+    let auto = null, k = 1, hovering = false;
+    function hl(m) { rows.forEach(r => r.classList.toggle('hl', r.dataset.k == m)); blocks.forEach(b => b.classList.toggle('hl', b.dataset.k == m)); }
+    [...rows, ...blocks].forEach(el => { el.addEventListener('mouseenter', () => { hovering = true; hl(el.dataset.k); }); el.addEventListener('mouseleave', () => { hovering = false; }); });
+    root.addEventListener('enter', () => { clearInterval(auto); k = 1; hl(1); auto = setInterval(() => { if (!hovering) { k = k % n + 1; hl(k); } }, 2400); });
+    hl(QA ? Math.min(4, n) : 1);
+  });
+  document.querySelectorAll('.chk li').forEach(li => li.addEventListener('click', () => li.classList.toggle('done')));
+  document.querySelectorAll('.plt tbody tr').forEach(tr => tr.addEventListener('click', () => tr.classList.toggle('done')));
+  // chú thích khi rê chuột: một khung nổi ngoài stage (stage bị scale)
+  const tip = document.createElement('div'); tip.id = 'qtip'; document.body.appendChild(tip);
+  let cur = null;
+  function place(x, y) { const w = tip.offsetWidth, h = tip.offsetHeight; let L = x + 16, T = y + 18; if (L + w > innerWidth - 8) L = Math.max(8, x - w - 16); if (T + h > innerHeight - 8) T = Math.max(8, y - h - 14); tip.style.left = L + 'px'; tip.style.top = T + 'px'; }
+  function show(el, x, y) { tip.innerHTML = el.dataset.tip; tip.classList.add('on'); cur = el; place(x, y); }
+  function hide() { tip.classList.remove('on'); cur = null; }
+  const touch = matchMedia('(hover: none)').matches;
+  document.addEventListener('mouseover', ev => { if (touch) return; const el = ev.target.closest && ev.target.closest('[data-tip]'); if (el) { if (el !== cur) show(el, ev.clientX, ev.clientY); } else if (cur) hide(); });
+  document.addEventListener('mousemove', ev => { if (cur && !touch) place(ev.clientX, ev.clientY); });
+  document.addEventListener('click', ev => { if (!touch) return; const el = ev.target.closest && ev.target.closest('[data-tip]'); if (el && el !== cur) show(el, ev.clientX, ev.clientY); else hide(); });
+  document.addEventListener('keydown', hide);
+  // thuật ngữ: bọc lần xuất hiện đầu tiên trên mỗi slide
+  const SKIP = '[data-tip],code,button,.rk,.tid,h1,h2,th,.btnrow,.tchips,.tpl-line,.src,.sr,.mxlg,.legend,.st,.kd,.pill,.eyebrow,.foot,.chrome,.lvno span,.wf .nav';
+  document.querySelectorAll('.slide').forEach(sl => {
+    const list = QG.concat((QP[sl.dataset.qp] || {}).gloss || []);
+    const res = list.map(([p, d]) => [new RegExp('(?<![\\p{L}\\p{N}])(?:' + p + ')(?![\\p{L}\\p{N}])', 'iu'), d]);
+    const seen = new Set(), root = sl.querySelector('.wrap'); if (!root) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest(SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach(n0 => {
+      let node = n0;
+      while (node) {
+        let best = null;
+        res.forEach(([re, d], k) => { if (seen.has(k)) return; const m = re.exec(node.data); if (m && (!best || m.index < best.m.index)) best = { m, d, k }; });
+        if (!best) break;
+        seen.add(best.k);
+        const mid = node.splitText(best.m.index), rest = mid.splitText(best.m[0].length);
+        const sp = document.createElement('span'); sp.className = 'gl'; sp.dataset.tip = best.d; sp.textContent = mid.data; mid.replaceWith(sp);
+        node = rest;
+      }
+    });
+  });
+})();
+/* ===========================================
+   SỬA CHỮ TẠI CHỖ — bản local: nút "Sửa chữ" hoặc phím E; Ctrl/Cmd+S lưu file.
+   Bản web: site.py ẩn nút và bỏ phím E.
+   =========================================== */
+const EDIT_SEL = '.slide h1,.slide h2,.slide h4,.slide p,.slide li,.slide td,.slide .v,.slide .t,.slide .cchip,.slide .c';
+let editing = false;
+function toggleEdit() {
+  editing = !editing;
+  document.body.classList.toggle('editing', editing);
+  document.getElementById('edit').classList.toggle('on', editing);
+  document.querySelectorAll(EDIT_SEL).forEach(el => { if (editing) el.setAttribute('contenteditable', 'true'); else el.removeAttribute('contenteditable'); });
+}
+function saveFile() {
+  if (editing) toggleEdit();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html' }));
+  a.download = location.pathname.split('/').pop() || 'deck.html'; a.click();
+}
+document.getElementById('edit').onclick = toggleEdit;
+document.addEventListener('keydown', e => {
+  const typing = e.target.closest && e.target.closest('input,textarea,[contenteditable="true"]');
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's' && location.protocol === 'file:') { e.preventDefault(); saveFile(); }
+  else if (typing) return;
+  else if(e.key.toLowerCase()==='e'&&!e.metaKey&&!e.ctrlKey)toggleEdit();
+});
+
+
+
+new SlidePresentation();
+</script>
+</body>
+</html>
