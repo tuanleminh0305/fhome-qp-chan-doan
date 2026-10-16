@@ -1,0 +1,252 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow"><title>Kế hoạch content QP</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/style.css"><script>(function(){var k='qp-theme';try{var t=localStorage.getItem(k);if(t)document.documentElement.dataset.theme=t}catch(e){}document.addEventListener('click',function(e){var b=e.target.closest('.theme');if(!b)return;var r=document.documentElement,c=r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'),n=c==='dark'?'light':'dark';r.dataset.theme=n;try{localStorage.setItem(k,n)}catch(e){}})})()</script></head><body>
+<a class="skip" href="#main">Bỏ qua tới nội dung</a>
+<header class="top"><div class="bar wide"><a class="brand" href="index.html">FHome Sài Gòn <span>· Query Processing</span></a><nav class="links" aria-label="Điều hướng"><a href="index.html">Tổng quan</a><a href="deck.html">Deck</a><a href="content-plan.html" aria-current=page>Kế hoạch content</a><a href="handoff.html">Bàn giao content</a></nav><button class="theme" type="button" aria-label="Đổi chế độ sáng/tối"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></div></header>
+<main id="main" class=wide><div class="doc"><nav class="toc" aria-label="Mục lục"><ol><li><a href="#nguyen-tac">Nguyên tắc</a></li><li><a href="#ot-1-172510-truoc-moc-oc-2910">Đợt 1 · 17–25/10 (trước mốc đọc 29/10)</a></li><li><a href="#ot-2-30101211-sau-oc-so-2910">Đợt 2 · 30/10–12/11 (sau đọc số 29/10)</a></li><li><a href="#ot-3-sau-1211">Đợt 3 · sau 12/11</a></li><li><a href="#quy-trinh-moi-viec">Quy trình mỗi việc</a></li><li><a href="#tracking">Tracking</a></li></ol></nav><article class="prose"><h1 id="ke-hoach-trien-khai-content-theo-chan-oan-query-processing">Kế hoạch triển khai content theo chẩn đoán Query Processing</h1>
+<blockquote>
+<p>Kế hoạch content cho các topic của chẩn đoán QP v1 (16/10/2026). Trạm này chỉ giữ plan, brief và tracking; bài viết chạy ở fork Content Production. Hạng là median SpySERP G1 14–16/10/2026.</p>
+</blockquote>
+<h2 id="nguyen-tac">Nguyên tắc</h2>
+<ul>
+<li>Không viết bài mới. Mọi việc là bổ sung trên trang đang có hạng, nhắm keyword đang ở hạng 11–50.</li>
+<li>Trang đang giữ Top 3/5: chỉ thêm, không rút.</li>
+<li>SEO lập brief theo URL; fork Content Production viết; SEO chấm QC tier-1, onpage và đăng.</li>
+<li>Không tự viết số liệu: ảnh dự án, giá, thông tin xưởng lấy từ FHome.</li>
+</ul>
+<h2 id="ot-1-172510-truoc-moc-oc-2910">Đợt 1 · 17–25/10 (trước mốc đọc 29/10)</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Trang</th>
+<th>Việc content</th>
+<th>Keyword đẩy (hạng)</th>
+<th>Cần FHome cung cấp</th>
+<th>Topic</th>
+<th>Hạn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>3 đoạn tóm tắt 2–3 câu (giá, quy trình, lưu ý), mỗi đoạn có link sang bài riêng</td>
+<td>thi công nội thất chung cư #20; giá thi công nội thất chung cư #13</td>
+<td>—</td>
+<td>T1</td>
+<td>20/10</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>/cong-ty-thiet-ke-noi-that/</td>
+<td>Thêm 1 đoạn 80–120 từ "Dịch vụ thiết kế nội thất chung cư tại TP.HCM"</td>
+<td>dịch vụ thiết kế nội thất chung cư #7; thiết kế nội thất chung cư tphcm #30; thiết kế nội thất căn hộ tphcm #34</td>
+<td>Thông tin xưởng, số dự án thật</td>
+<td>T7</td>
+<td>22/10</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>/thiet-ke-noi-that-chung-cu/50m2/, /60m2/, /1-phong-ngu/, /2-phong-ngu/</td>
+<td>Mỗi trang thêm ít nhất 6 mẫu ảnh thật, chú thích diện tích và tên dự án; đưa cụm "căn hộ" vào đoạn mở và một H2</td>
+<td>50m² #22; 60m² #26; căn hộ 1 phòng ngủ #16; căn hộ 2 phòng ngủ #16; chung cư 2 ngủ #22</td>
+<td>Ảnh dự án thật theo diện tích và số phòng ngủ</td>
+<td>T2</td>
+<td>25/10</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>/phong-cach-thiet-ke/nhat-ban/</td>
+<td>Đoạn định nghĩa 40–60 từ ngay dưới H1, kèm 3–5 đặc trưng</td>
+<td>phong cách nội thất nhật bản #11; 3 keyword "phong cách…" #12–14</td>
+<td>—</td>
+<td>T5</td>
+<td>25/10</td>
+</tr>
+</tbody>
+</table></div>
+<p>SEO tự làm (không qua content): đổi H2 trang giá có cụm "căn hộ" (T4); trang phòng khách Nhật link sang trang phong cách Nhật (T5); bài quy trình link về trang thi công (T1); hai bài lưu ý link nhau.</p>
+<h2 id="ot-2-30101211-sau-oc-so-2910">Đợt 2 · 30/10–12/11 (sau đọc số 29/10)</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Trang</th>
+<th>Việc content</th>
+<th>Keyword đẩy (hạng)</th>
+<th>Cần FHome cung cấp</th>
+<th>Topic</th>
+<th>Hạn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C5</td>
+<td>/thi-cong-noi-that-chung-cu/</td>
+<td>H2 mới "Thiết kế và thi công nội thất chung cư một đầu mối"; thêm dòng "gói tiết kiệm" vào bảng gói</td>
+<td>thiết kế thi công nội thất căn hộ #62; …nhà chung cư #43; …chung cư #26; thi công nội thất chung cư giá rẻ #11</td>
+<td>Phạm vi và mức giá gói tiết kiệm</td>
+<td>T1</td>
+<td>05/11</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>/thiet-ke-noi-that-nha-pho/</td>
+<td>Khối "Mẫu nội thất nhà phố theo phong cách" bằng ảnh thật. Chỉ làm nếu đến 29/10 head chưa ổn định trong Top 20</td>
+<td>thiết kế nội thất nhà phố #24; 11 keyword #16–47</td>
+<td>Ảnh dự án nhà phố</td>
+<td>T3</td>
+<td>05/11</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>/thiet-ke-noi-that-nha-pho/2-tang/, /3-tang/, /5x20m/</td>
+<td>Thêm mẫu ảnh và đoạn bố trí theo tầng</td>
+<td>2 tầng #25; 5x20 #25; 3 tầng #39</td>
+<td>Ảnh dự án nhà phố</td>
+<td>T3</td>
+<td>08/11</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>/phong-cach-thiet-ke/toi-gian/, /wabi-sabi/, /tropical/</td>
+<td>Thêm mẫu ảnh thật và đoạn đặc trưng dưới H1</td>
+<td>tối giản #22–24; wabi sabi #17–22; tropical #10–13</td>
+<td>Ảnh dự án theo phong cách</td>
+<td>T6</td>
+<td>12/11</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ot-3-sau-1211">Đợt 3 · sau 12/11</h2>
+<p>Head chung cư (T8), các phong cách và xu hướng, thi công nhà phố (T9): chưa viết thêm. Các trang đã index nhưng chưa có lượt hiển thị; chờ số GSC sau go-live rồi mới quyết.</p>
+<h2 id="quy-trinh-moi-viec">Quy trình mỗi việc</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Bước</th>
+<th>Việc</th>
+<th>Ai</th>
+<th>Xong khi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Brief theo SOP 02 (dạng sửa section)</td>
+<td>Lê Minh Tuấn</td>
+<td>Brief đủ mục, không TBD</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Viết</td>
+<td>Fork Content Production</td>
+<td>Bài nộp kèm self-check</td>
+</tr>
+<tr>
+<td>3</td>
+<td>QC tier-1 (outline O1–O18, viết W1–W21)</td>
+<td>Lê Minh Tuấn</td>
+<td>Verdict ghi vào tracking</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Onpage và đăng</td>
+<td>Lê Minh Tuấn</td>
+<td>GET thấy khối mới, link mới</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Ghi nhật ký thay đổi theo URL</td>
+<td>Lê Minh Tuấn</td>
+<td>Ngày sửa có trong nhật ký</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Đọc kết quả theo template sau 14 ngày</td>
+<td>Lê Minh Tuấn</td>
+<td>Bảng trước/sau theo template</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="tracking">Tracking</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Brief</th>
+<th>Bài (fork)</th>
+<th>QC</th>
+<th>Đăng</th>
+<th>Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>chưa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td>C2</td>
+<td>chưa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>chờ thông tin xưởng</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>chưa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>chờ ảnh dự án</td>
+</tr>
+<tr>
+<td>C4</td>
+<td>chưa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td></td>
+</tr>
+<tr>
+<td>C5</td>
+<td>chưa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>chờ giá gói tiết kiệm</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>chưa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>quyết sau 29/10</td>
+</tr>
+<tr>
+<td>C7</td>
+<td>chưa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>chờ ảnh</td>
+</tr>
+<tr>
+<td>C8</td>
+<td>chưa</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>chờ ảnh</td>
+</tr>
+</tbody>
+</table></div></article></div></main><footer>Tài liệu nội bộ GTV SEO · không gửi khách · dữ liệu SpySERP (G1) và Google Search Console, cập nhật 16/10/2026.</footer><script>(function(){var q=null,t=document.getElementById('lookup'),o=document.getElementById('qn');if(q&&t){var rs=[].slice.call(t.tBodies[0].rows);function f(){var v=q.value.trim().toLowerCase(),n=0;rs.forEach(function(r){var s=!v||r.textContent.toLowerCase().indexOf(v)>-1;r.hidden=!s;if(s)n++});o.textContent=n+' / '+rs.length+' keyword'}q.addEventListener('input',f);f()}
+var ls=[].slice.call(document.querySelectorAll('.toc a'));if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){ls.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id)})}})},{rootMargin:'-80px 0px -70% 0px'});document.querySelectorAll('.prose h2[id]').forEach(function(x){io.observe(x)})}})()</script></body></html>
